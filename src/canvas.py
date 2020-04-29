@@ -164,40 +164,47 @@ class Canvas:
 			y_estimates.append(np.array(y_estimate))
 			z_estimates.append(np.array(z_estimate))
 
-		while True:
-			print("===================================")
-			print("===============<Menu>==============")
-			print("root(0)		l_hip(1) 	l_knee(2)")
-			print("l_ankle(3) 	l_foot(4) 	r_hip(5)")
-			print("r_knee(6) 	r_ankle(7) 	r_foot(8)")
-			print("quit(9)")
-			print("===================================")
+		# while True:
+		# 	print("===================================")
+		# 	print("===============<Menu>==============")
+		# 	print("root(0)		l_hip(1) 	l_knee(2)")
+		# 	print("l_ankle(3) 	l_foot(4) 	r_hip(5)")
+		# 	print("r_knee(6) 	r_ankle(7) 	r_foot(8)")
+		# 	print("quit(9)")
+		# 	print("===================================")
 
-			num = int(input("Select Number: "))
+			# num = int(input("Select Number: "))
+
+		word_name = {}
+		word_name[0] = "root"
+		word_name[1] = "left hip"
+		word_name[2] = "left knee"
+		word_name[3] = "left ankle"
+		word_name[4] = "left foot"
+		word_name[5] = "right hip"
+		word_name[6] = "right knee"
+		word_name[7] = "right ankle"
+		word_name[8] = "right foot"
+
+		for i in range(0,9):
 			fig, axs = plt.subplots(nrows=2, ncols=3, constrained_layout=True)
-			axs[0][0].plot(idx, x_grounds[num], '-', color='red')
-			axs[0][0].plot(idx, x_estimates[num], 'o', color='blue')
-			axs[0][0].set_xlabel('frame')
+			axs[0][0].plot(idx, x_grounds[i], '-', color='red')
+			axs[0][0].plot(idx, x_estimates[i], 'o', color='blue')
 			axs[0][0].set_ylabel('position(mm)')
-			axs[0][0].set_title('X position Display {}'.format(num))
-			axs[0][1].plot(idx, y_grounds[num], '-', color='red')
-			axs[0][1].plot(idx, y_estimates[num], 'o', color='blue')
-			axs[0][1].set_xlabel('frame')
-			axs[0][1].set_title('Y position Display {}'.format(num))
-			axs[0][2].plot(idx, z_grounds[num], '-', color='red')
-			axs[0][2].plot(idx, z_estimates[num], 'o', color='blue')
-			axs[0][2].set_xlabel('frame')
-			axs[0][2].set_title('Z position Display {}'.format(num))
+			axs[0][0].set_title('X position')
+			axs[0][1].plot(idx, y_grounds[i], '-', color='red')
+			axs[0][1].plot(idx, y_estimates[i], 'o', color='blue')
+			axs[0][1].set_title('Y position')
+			axs[0][2].plot(idx, z_grounds[i], '-', color='red')
+			axs[0][2].plot(idx, z_estimates[i], 'o', color='blue')
+			axs[0][2].set_title('Z position {}'.format(word_name[i]))
 
-			axs[1][0].plot(idx, x_estimates[num] - x_grounds[num], '-', color='red')
+			axs[1][0].plot(idx, x_estimates[i] - x_grounds[i], '-', color='red')
 			axs[1][0].set_xlabel('frame')
 			axs[1][0].set_ylabel('error(mm)')
-			axs[1][0].set_title('X position Display {}'.format(num))
-			axs[1][1].plot(idx, y_estimates[num] - y_grounds[num], '-', color='red')
+			axs[1][1].plot(idx, y_estimates[i] - y_grounds[i], '-', color='red')
 			axs[1][1].set_xlabel('frame')
-			axs[1][1].set_title('Y position Display {}'.format(num))
-			axs[1][2].plot(idx, z_estimates[num] - z_grounds[num], '-', color='red')
+			axs[1][2].plot(idx, z_estimates[i] - z_grounds[i], '-', color='red')
 			axs[1][2].set_xlabel('frame')
-			axs[1][2].set_title('Z position Display {}'.format(num))
-			plt.show()
+		plt.show()
 
