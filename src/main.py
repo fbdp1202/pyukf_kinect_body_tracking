@@ -61,32 +61,12 @@ def run_ukf(ukf, skeletons, test_num):
 
 	return mse_ground_data, mse_estimate_data, draw_ground_data, draw_estimate_data
 
-def skeleton_3D_plot(ground_data, estimate_data, Ipython, test_num, sleep_t):
-	canvas = Canvas()
-	isContinue = True
-	test_num = min(test_num, len(ground_data))
-	if not Ipython:
-		for i in range(test_num):
-			try:
-				canvas.draw_3D_plot(ground_data[i], estimate_data[i], i)
-			except KeyboardInterrupt:
-				break
-	else:
-		for i in range(test_num):
-			try:
-				canvas.animate_3D_plot(ground_data[i], estimate_data[i], i)
-				time.sleep(sleep_t)
-			except KeyboardInterrupt:
-				isContinue = False
-				break
-			if not isContinue:
-				break
-
 def skeleton_draw(ground_data, estimate_data, plot_mode='3D', Ipython=False, test_num=1e9, sleep_t=1):
+	canvas = Canvas()
 	if plot_mode == '3D':
-		skeleton_3D_plot(ground_data, estimate_data, Ipython, test_num, sleep_t)
+		canvas.skeleton_3D_plot(ground_data, estimate_data, Ipython, test_num, sleep_t)
 	elif plot_mode == 'point':
-		pass
+		canvas.skeleton_point_plot(ground_data, estimate_data, test_num)
 
 @check_time
 def simulation_ukf(filename, test_num, model, cbr_num=50):
@@ -135,4 +115,4 @@ def simulation_ukf_brute_force(filename, test_num, model, cbr_num=50):
 if __name__ == "__main__":
 	ground_data, estimate_data = simulation_ukf('../data/input_stand.txt', 50, 'IJU', 50)
 	if isplot:
-		skeleton_draw(ground_data, estimate_data, plot_mode, Ipython)
+		skeleton_draw(ground_data, estimate_data)

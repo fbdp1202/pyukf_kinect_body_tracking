@@ -41,41 +41,48 @@ class Canvas:
 		self.graph[22] = [23]
 		self.graph[24] = [25]
 
-	def draw_skeleton_vec(self, here, vec_color):
+	def draw_skeleton_vec(self, here, vec_color, data):
 		if here in self.graph:
 			for nx in self.graph[here]:
-				if nx in self.data:
-					self.ax.quiver(self.data[here][0],
-					 			   self.data[here][1],
-					 			   self.data[here][2],
-					 			   self.data[nx][0] - self.data[here][0],
-					 			   self.data[nx][1] - self.data[here][1],
-					 			   self.data[nx][2] - self.data[here][2],
+				if nx in data:
+					self.ax.quiver(data[here][0],
+					 			   data[here][1],
+					 			   data[here][2],
+					 			   data[nx][0] - data[here][0],
+					 			   data[nx][1] - data[here][1],
+					 			   data[nx][2] - data[here][2],
 					 			   color=vec_color
 					)
-					self.draw_skeleton_vec(nx, vec_color)
+					self.draw_skeleton_vec(nx, vec_color, data)
 
-	def set_plot_label(self, vec_color, vec_label):
-		self.ax.quiver(self.data[0][0], self.data[0][1], self.data[0][2], 0, 0, 0, color=vec_color, label=vec_label)
+	def set_plot_label(self, vec_color, vec_label, data):
+		self.ax.quiver(data[0][0], data[0][1], data[0][2], 0, 0, 0, color=vec_color, label=vec_label)
 
-
-	def draw_ground(self,ground):
-		self.data = {}
+	def make_draw_ground_data(self, ground):
+		data = {}
 		for i in range(len(ground)):
-			self.data[i] = [float(ground[i][0]), float(ground[i][1]), float(ground[i][2])]
+			data[i] = [ground[i][0], ground[i][1], ground[i][2]]
+		return data
+
+	def make_draw_estimate_data(self, estimate):
+		data = {}
+		for i in range(int(len(estimate)/3)):
+			data[self.lower_idx[i]] = [estimate[i*3],estimate[i*3+1],estimate[i*3+2]]
+		return data
+
+	def draw_ground(self, ground):
+		data = self.make_draw_ground_data(ground)
 		vec_color = 'green'
 		vec_label = 'ground'
-		self.draw_skeleton_vec(0, vec_color)
-		self.set_plot_label(vec_color, vec_label)
+		self.draw_skeleton_vec(0, vec_color, data)
+		self.set_plot_label(vec_color, vec_label, data)
 
-	def draw_estimate(self,estimate):
-		self.data = {}
-		for i in range(int(len(estimate)/3)):
-			self.data[self.lower_idx[i]] = [estimate[i*3],estimate[i*3+1],estimate[i*3+2]]
+	def draw_estimate(self, estimate):
+		data = make_draw_estimate_data(estimate)
 		vec_color = 'blue'
 		vec_label = 'estimate'
-		self.draw_skeleton_vec(0, vec_color)
-		self.set_plot_label(vec_color, vec_label)
+		self.draw_skeleton_vec(0, vec_color, data)
+		self.set_plot_label(vec_color, vec_label, data)
 
 	def update_graph(self, num):
 		self.draw_ground(self.ground_data[num])
@@ -106,3 +113,64 @@ class Canvas:
 		self.set_3D_plot(1)
 		display(plt.gcf())
 		clear_output(wait=True)
+
+	def skeleton_3D_plot(ground_data, estimate_data, Ipython, test_num, sleep_t):
+		isContinue = True
+		test_num = min(test_num, len(ground_data))
+		if not Ipython:
+			for i in range(test_num):
+				try:
+					self.draw_3D_plot(ground_data[i], estimate_data[i], i)
+				except KeyboardInterrupt:
+					break
+		else:
+			for i in range(test_num):
+				try:
+					self.animate_3D_plot(ground_data[i], estimate_data[i], i)
+					time.sleep(sleep_t)
+				except KeyboardInterrupt:
+					isContinue = False
+					break
+				if not isContinue:
+					break
+
+	def skeleton_point_plot(ground_data, estimate_data, test_num):
+		test_num = min(test_num, len(ground_data))
+		num = 0
+		x_ground = []
+		y_ground = []
+		z_ground = []
+		x_estimate = []
+		y_estimate = []
+		z_estimate = []
+		idx = range(test_num)
+		for i in range(test_num):
+			x_ground.append(ground_data[i][num][0])
+			y_ground.append(ground_data[i][num][1])
+			z_ground.append(ground_data[i][num][2])
+			x_estimate.append(ground_data[i][num*3+0])
+			y_estimate.append(ground_data[i][num*3+1])
+			z_estimate.append(ground_data[i][num*3+2])
+
+		plt.subplot(1,3,1)
+		plt.plot(idx, x_ground, color='red')
+		plt.plot(idx, x_estimate, color='blue')
+		plt.xlabel('frame')
+		plt.ylabel('X position(mm)')
+		plt.title('X position Display')
+
+		plt.subplot(1,3,2)
+		plt.plot(idx, y_ground, color='red')
+		plt.plot(idx, y_estimate, color='blue')
+		plt.xlabel('frame')
+		plt.ylabel('Y position(mm)')
+		plt.title('Y position Display')
+
+		plt.subplot(1,3,3)
+		plt.plot(idx, z_ground, color='red')
+		plt.plot(idx, z_estimate, color='blue')
+		plt.xlabel('frame')
+		plt.ylabel('Z position(mm)')
+		plt.title('Z position Display')
+		plt.show()
+
