@@ -23,8 +23,38 @@ def check_time(function):
 
 	return measure
 
+def interval_compasation(data, test_num, num):
+	if num <= 0:
+		return data
+
+	test_num = min(len(data)-1, test_num)
+	new_data = []
+	for i in range(test_num):
+		step_x = []
+		step_y = []
+		step_z = []
+		for j in range(len(data[i])):
+			step_x = step_x + [(float(data[i+1][j][0]) - float(data[i][j][0]))/(float)(num)]
+			step_y = step_y + [(float(data[i+1][j][1]) - float(data[i][j][1]))/(float)(num)]
+			step_z = step_z + [(float(data[i+1][j][2]) - float(data[i][j][2]))/(float)(num)]
+		for j in range(num):
+			for k in range(len(data[i])):
+				new_data = new_data + [float(data[i][k][0]) + step_x[k] * j]
+				new_data = new_data + [float(data[i][k][1]) + step_y[k] * j]
+				new_data = new_data + [float(data[i][k][2]) + step_z[k] * j]
+				new_data = new_data + [float(data[i][k][3])]
+				new_data = new_data + [float(data[i][k][4])]
+				new_data = new_data + [float(data[i][k][5])]
+				new_data = new_data + [float(data[i][k][6])]
+	return (int)(len(new_data)/26/7), np.array(new_data).reshape((int)(len(new_data)/26/7),26,7)
+
+
+
+
+
 def init_simul(filename, test_num, cbr_num=50):
 	data = read_data_skeleton(filename)
+	test_num, data = interval_compasation(data, test_num, 10)
 	skeletons = []
 	for d in data:
 		skeletons.append(Skeleton(d))
@@ -72,7 +102,7 @@ def skeleton_draw(ground_data, estimate_data, plot_mode='3D', Ipython=False, tes
 def simulation_ukf(filename, test_num, model, cbr_num=50):
 	skeletons, init_mean, test_num = init_simul(filename, test_num, cbr_num)
 
-	init_cov = [1e-6, 1e-4, 1e-6, 1e-4, 1e-6, 1e-1, 1e-6, 1e-1, 1e-6, 1e-4, 1e-4, 100]
+	init_cov = [1e-6, 1e-4, 1e-6, 1e-4, 1e-6, 1e-1, 1e-6, 1e-1, 1e-6, 1e-4, 1e-3, 300]
 	ukf = make_filter(init_mean, model, init_cov)
 	mse_ground_data, mse_estimate_data, draw_ground_data, draw_estimate_data = run_ukf(ukf, skeletons, test_num)
 	mse_ret = mean_squared_error(mse_ground_data, mse_estimate_data, test_num)

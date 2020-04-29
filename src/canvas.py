@@ -78,7 +78,7 @@ class Canvas:
 		self.set_plot_label(vec_color, vec_label, data)
 
 	def draw_estimate(self, estimate):
-		data = make_draw_estimate_data(estimate)
+		data = self.make_draw_estimate_data(estimate)
 		vec_color = 'blue'
 		vec_label = 'estimate'
 		self.draw_skeleton_vec(0, vec_color, data)
@@ -142,7 +142,6 @@ class Canvas:
 		x_estimates = []
 		y_estimates = []
 		z_estimates = []
-		idx = range(test_num)
 		for i in range(int(len(estimate_data[0])/3)):
 			x_ground = []
 			y_ground = []
@@ -163,6 +162,7 @@ class Canvas:
 			x_estimates.append(np.array(x_estimate))
 			y_estimates.append(np.array(y_estimate))
 			z_estimates.append(np.array(z_estimate))
+		idx = range(test_num)
 
 		# while True:
 		# 	print("===================================")
