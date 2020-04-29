@@ -114,7 +114,7 @@ class Canvas:
 		display(plt.gcf())
 		clear_output(wait=True)
 
-	def skeleton_3D_plot(ground_data, estimate_data, Ipython, test_num, sleep_t):
+	def skeleton_3D_plot(self, ground_data, estimate_data, Ipython, test_num, sleep_t):
 		isContinue = True
 		test_num = min(test_num, len(ground_data))
 		if not Ipython:
@@ -134,43 +134,70 @@ class Canvas:
 				if not isContinue:
 					break
 
-	def skeleton_point_plot(ground_data, estimate_data, test_num):
+	def skeleton_point_plot(self, ground_data, estimate_data, test_num):
 		test_num = min(test_num, len(ground_data))
-		num = 0
-		x_ground = []
-		y_ground = []
-		z_ground = []
-		x_estimate = []
-		y_estimate = []
-		z_estimate = []
+		x_grounds = []
+		y_grounds = []
+		z_grounds = []
+		x_estimates = []
+		y_estimates = []
+		z_estimates = []
 		idx = range(test_num)
-		for i in range(test_num):
-			x_ground.append(ground_data[i][num][0])
-			y_ground.append(ground_data[i][num][1])
-			z_ground.append(ground_data[i][num][2])
-			x_estimate.append(ground_data[i][num*3+0])
-			y_estimate.append(ground_data[i][num*3+1])
-			z_estimate.append(ground_data[i][num*3+2])
+		for i in range(int(len(estimate_data[0])/3)):
+			x_ground = []
+			y_ground = []
+			z_ground = []
+			x_estimate = []
+			y_estimate = []
+			z_estimate = []
+			for j in range(test_num):
+				x_ground.append(ground_data[j][self.lower_idx[i]][0])
+				y_ground.append(ground_data[j][self.lower_idx[i]][1])
+				z_ground.append(ground_data[j][self.lower_idx[i]][2])
+				x_estimate.append(estimate_data[j][i*3+0])
+				y_estimate.append(estimate_data[j][i*3+1])
+				z_estimate.append(estimate_data[j][i*3+2])
+			x_grounds.append(np.array(x_ground))
+			y_grounds.append(np.array(y_ground))
+			z_grounds.append(np.array(z_ground))
+			x_estimates.append(np.array(x_estimate))
+			y_estimates.append(np.array(y_estimate))
+			z_estimates.append(np.array(z_estimate))
 
-		plt.subplot(1,3,1)
-		plt.plot(idx, x_ground, color='red')
-		plt.plot(idx, x_estimate, color='blue')
-		plt.xlabel('frame')
-		plt.ylabel('X position(mm)')
-		plt.title('X position Display')
+		while True:
+			print("===================================")
+			print("===============<Menu>==============")
+			print("root(0)		l_hip(1) 	l_knee(2)")
+			print("l_ankle(3) 	l_foot(4) 	r_hip(5)")
+			print("r_knee(6) 	r_ankle(7) 	r_foot(8)")
+			print("quit(9)")
+			print("===================================")
 
-		plt.subplot(1,3,2)
-		plt.plot(idx, y_ground, color='red')
-		plt.plot(idx, y_estimate, color='blue')
-		plt.xlabel('frame')
-		plt.ylabel('Y position(mm)')
-		plt.title('Y position Display')
+			num = int(input("Select Number: "))
+			fig, axs = plt.subplots(nrows=2, ncols=3, constrained_layout=True)
+			axs[0][0].plot(idx, x_grounds[num], '-', color='red')
+			axs[0][0].plot(idx, x_estimates[num], 'o', color='blue')
+			axs[0][0].set_xlabel('frame')
+			axs[0][0].set_ylabel('position(mm)')
+			axs[0][0].set_title('X position Display {}'.format(num))
+			axs[0][1].plot(idx, y_grounds[num], '-', color='red')
+			axs[0][1].plot(idx, y_estimates[num], 'o', color='blue')
+			axs[0][1].set_xlabel('frame')
+			axs[0][1].set_title('Y position Display {}'.format(num))
+			axs[0][2].plot(idx, z_grounds[num], '-', color='red')
+			axs[0][2].plot(idx, z_estimates[num], 'o', color='blue')
+			axs[0][2].set_xlabel('frame')
+			axs[0][2].set_title('Z position Display {}'.format(num))
 
-		plt.subplot(1,3,3)
-		plt.plot(idx, z_ground, color='red')
-		plt.plot(idx, z_estimate, color='blue')
-		plt.xlabel('frame')
-		plt.ylabel('Z position(mm)')
-		plt.title('Z position Display')
-		plt.show()
+			axs[1][0].plot(idx, x_estimates[num] - x_grounds[num], '-', color='red')
+			axs[1][0].set_xlabel('frame')
+			axs[1][0].set_ylabel('error(mm)')
+			axs[1][0].set_title('X position Display {}'.format(num))
+			axs[1][1].plot(idx, y_estimates[num] - y_grounds[num], '-', color='red')
+			axs[1][1].set_xlabel('frame')
+			axs[1][1].set_title('Y position Display {}'.format(num))
+			axs[1][2].plot(idx, z_estimates[num] - z_grounds[num], '-', color='red')
+			axs[1][2].set_xlabel('frame')
+			axs[1][2].set_title('Z position Display {}'.format(num))
+			plt.show()
 
