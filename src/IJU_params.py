@@ -5,10 +5,10 @@ Lower body model
 	state vector = [
     	[root:    p(x,y,z),      u(x,y,z)    ]
         [root_l:  theta(x,y,z),  w(x,y,z), L ]
-        [root_r:  theta(x,y,z),  w(x,y,z), L ]
         [l-hip:   theta(x,y,z),  w(x,y,z), L ]
         [l-knee:  theta(y),      w(y),     L ]
         [l-ankle: theta(y,z),    w(y,z),   L ]
+        [root_r:  theta(x,y,z),  w(x,y,z), L ]
         [r-hip:   theta(x,y,z),  w(x,y,z), L ]
         [r-knee:  theta(y),      w(y),     L ]
         [r-ankle: theta(y,z),    w(y,z),   L ]

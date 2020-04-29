@@ -93,13 +93,13 @@ class Canvas:
 			self.ax.set_zlabel('Z Label')
 			plt.show()
 
-	def draw(self, ground, estimate):
-		self.set_3D_plot(0)
+	def draw_3D_plot(self, ground, estimate, idx):
+		self.set_3D_plot(0, idx)
 		self.draw_ground(ground)
 		self.draw_estimate(estimate)
 		self.set_3D_plot(1)
 
-	def animate(self, ground, estimate, idx):
+	def animate_3D_plot(self, ground, estimate, idx):
 		self.set_3D_plot(0, idx)
 		self.draw_ground(ground)
 		self.draw_estimate(estimate)

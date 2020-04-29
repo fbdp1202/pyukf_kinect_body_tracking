@@ -9,7 +9,7 @@ class MJU_Filter:
 		self.transition_fun = self.transition_lower
 		self.observation_fun = self.observation_lower
 		self.trans_cov = param.trans_cov
-		self.obs_cov = prama.obs_cov
+		self.obs_cov = param.obs_cov
 		self.mean = param.mean
 		self.cov = param.init_trans_cov
 		
@@ -33,15 +33,15 @@ class MJU_Filter:
 	# observation function for Additive UKF
 	# expected range data
 	def observation_lower(self, state):
-		wPr = np.array(state[0:3]).reshape(3,1)
-		wRr_l = R.from_euler('xyz',state[6:9], degrees=True).as_matrix()
-		wRr_r = R.from_euler('xyz',state[12:15], degrees=True).as_matrix()
-		rRh_l = R.from_euler('xyz', state[18:21], degrees=True).as_matrix()
-		hRk_l = R.from_euler('y', state[24], degrees=True).as_matrix()
-		kRa_l = R.from_euler('yz', state[26:28], degrees=True).as_matrix()
-		rRh_r = R.from_euler('xyz', state[30:33], degrees=True).as_matrix()
-		hRk_r = R.from_euler('y', state[36], degrees=True).as_matrix()
-		kRa_r = R.from_euler('yz', state[38:40], degrees=True).as_matrix()
+		wPr = np.array(state[0:3]).reshape(3,1)									#[0:6]
+		wRr_l = R.from_euler('xyz',state[6:9], degrees=True).as_matrix()		#[6:12]
+		rRh_l = R.from_euler('xyz', state[12:15], degrees=True).as_matrix()		#[12:18]
+		hRk_l = R.from_euler('y', state[18], degrees=True).as_matrix()			#[18:20]
+		kRa_l = R.from_euler('yz', state[20:22], degrees=True).as_matrix()		#[20:24]
+		wRr_r = R.from_euler('xyz',state[24:27], degrees=True).as_matrix()		#[24:30]
+		rRh_r = R.from_euler('xyz', state[30:33], degrees=True).as_matrix()		#[30:36]
+		hRk_r = R.from_euler('y', state[36], degrees=True).as_matrix()			#[36:38]
+		kRa_r = R.from_euler('yz', state[38:40], degrees=True).as_matrix()		#[38:42]
 
 		wRh_l = np.matmul(wRr_l, rRh_l)
 		wRk_l = np.matmul(wRh_l, hRk_l)
@@ -75,10 +75,10 @@ class MJU_Filter:
 		return self.new_state
 
 	def update_lower(self, measurement):
-		self.l_mean, self.l_cov = self.lower_ukf.filter_update(self.l_mean, self.l_cov, measurement)
+		self.mean, self.cov = self.lower_ukf.filter_update(self.mean, self.cov, measurement)
 		return self.new_state
 
-def MJU_Filter_Controler:
+class MJU_Filter_Controler:
 	def __init__(self, init_mean, init_cov):
 		self.lower_point = [0, 12, 13, 14, 15, 16, 17, 18, 19]
 		self.flt = MJU_Filter(MJU_Lower_Params(init_mean, init_cov))

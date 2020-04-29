@@ -5,11 +5,11 @@ Lower body model
 	state vector
 	x = [
 		root: 			3D(6)	p(x,y,z), u(x,y,z), 	 	,
-		root_l: 		3D(6)						theta(x,y,z), 	w(x,y,z),
-		root_r: 		3D(6) 						theta(x,y,z), 	w(x,y,z),
+		l_root: 		3D(6)						theta(x,y,z), 	w(x,y,z),
 		l-hip: 			3D(6) 						theta(x,y,z), 	w(x,y,z)	,
 		l-knee: 		1D(2) 						theta(z), 		w(z)		,
 		l-ankle: 		2D(4) 						theta(y,z), 	w(y,z)		,
+        r_root:         3D(6)                       theta(x,y,z),   w(x,y,z),
 		r-hip: 			3D(6)						theta(x,y,z), 	w(x,y,z)	,
 		r-knee: 		1D(2)						theta(z), 		w(z)		,
 		r-ankle: 		2D(4) 						theta(y,z), 	w(y,z)		,
@@ -59,7 +59,7 @@ class MJU_Lower_Params:
         self.ankle_l_t = self.ankle_r_t = init_cov[8]
         self.ankle_l_w = self.ankle_r_w = init_cov[9]
         self.link_length = 1e-9
-        self.state_cov_list = [self.root_p,self.root_v,self.root_l_t,self.root_l_w,self.root_r_t,self.root_r_w,self.hip_l_t,self.hip_l_w,self.knee_l_t,self.knee_l_w,self.ankle_l_t,self.ankle_l_w,self.hip_r_t,self.hip_r_w,self.knee_r_t,self.knee_r_w,self.ankle_r_t,self.ankle_r_w,self.link_length]
+        self.state_cov_list = [self.root_p,self.root_v,self.root_l_t,self.root_l_w,self.hip_l_t,self.hip_l_w,self.knee_l_t,self.knee_l_w,self.ankle_l_t,self.ankle_l_w,self.root_r_t,self.root_r_w,self.hip_r_t,self.hip_r_w,self.knee_r_t,self.knee_r_w,self.ankle_r_t,self.ankle_r_w,self.link_length]
 
     def set_state_dim(self):
         self.root_dim = 3
@@ -68,7 +68,7 @@ class MJU_Lower_Params:
         self.knee_l_dim = self.knee_r_dim = 1
         self.ankle_l_dim = self.ankle_r_dim = 2
         self.link_length = 8
-        self.state_cov_dim_list = [self.root_dim,self.root_dim,self.root_l_dim,self.root_l_dim,self.root_r_dim,self.root_r_dim,self.hip_l_dim,self.hip_l_dim,self.knee_l_dim,self.knee_l_dim,self.ankle_l_dim,self.ankle_l_dim,self.hip_r_dim,self.hip_r_dim,self.knee_r_dim,self.knee_r_dim,self.ankle_r_dim,self.ankle_r_dim,self.link_length]
+        self.state_cov_dim_list = [self.root_dim,self.root_dim,self.root_l_dim,self.root_l_dim,self.hip_l_dim,self.hip_l_dim,self.knee_l_dim,self.knee_l_dim,self.ankle_l_dim,self.ankle_l_dim,self.root_r_dim,self.root_r_dim,self.hip_r_dim,self.hip_r_dim,self.knee_r_dim,self.knee_r_dim,self.ankle_r_dim,self.ankle_r_dim,self.link_length]
         self.state_cov_total_dim = sum(self.state_cov_dim_list)
 
     def gen_trans_covariance(self):

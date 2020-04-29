@@ -38,7 +38,7 @@ class Calibration:
 						n_offset = rot_mat
 		return n_offset, min_degree
 
-	def get_lower_frontward_bruth_force(self, data):
+	def get_lower_frontward_brute_force(self, data):
 		init_data = data
 		lower_l = [0, 12, 13, 14, 15]
 		lower_r = [0, 16, 17, 18, 19]
@@ -55,33 +55,41 @@ class Calibration:
 		l_offset = np.eye(3)
 		r_offset = np.eye(3)
 
-		l_offset, root_l_t = self.get_opt_degree(lower_l_pos[0], lower_l_pos[1], 0, 0, 289, 289, 26, 26, l_offset)
+		l_offset, root_l_t = self.get_opt_degree(lower_l_pos[0], lower_l_pos[1], 0, 0, 0, 360, 0, 360, l_offset)
 		root_l_w = np.array([0,0,0])
+		print("root_l_t = ", root_l_t)
 
-		l_offset, hip_l_t = self.get_opt_degree(lower_l_pos[1], lower_l_pos[2], 0, 0, 46, 46, 87, 87, l_offset)
+		l_offset, hip_l_t = self.get_opt_degree(lower_l_pos[1], lower_l_pos[2], 0, 0, 0, 360, 0, 360, l_offset)
 		hip_l_w = np.array([0,0,0])
+		print("hip_l_t = ", hip_l_t)
 
-		l_offset, knee_l_t = self.get_opt_degree(lower_l_pos[2], lower_l_pos[3], 0, 0, 308, 308, 0, 0, l_offset)
+		l_offset, knee_l_t = self.get_opt_degree(lower_l_pos[2], lower_l_pos[3], 0, 0, 0, 360, 0, 0, l_offset)
 		knee_l_t = [knee_l_t[1]]
 		knee_l_w = np.array([0])
+		print("knee_l_t = ", knee_l_t)
 
-		l_offset, ankle_l_t = self.get_opt_degree(lower_l_pos[3], lower_l_pos[4], 0, 0, 66, 66, 6, 6, l_offset)
+		l_offset, ankle_l_t = self.get_opt_degree(lower_l_pos[3], lower_l_pos[4], 0, 0, 0, 360, 0, 360, l_offset)
 		ankle_l_t = ankle_l_t[1:3]
 		ankle_l_w = np.array([0,0])
+		print("ankle_l_t = ", ankle_l_t)
 
-		r_offset, root_r_t = self.get_opt_degree(lower_r_pos[0], lower_r_pos[1], 0, 0, 71, 71, 206, 206, r_offset)
+		r_offset, root_r_t = self.get_opt_degree(lower_r_pos[0], lower_r_pos[1], 0, 0, 0, 360, 0, 360, r_offset)
 		root_r_w = np.array([0,0,0])
+		print("root_r_t = ", root_r_t)
 
-		r_offset, hip_r_t = self.get_opt_degree(lower_r_pos[1], lower_r_pos[2], 0, 0, 46, 46, 271, 271, r_offset)
+		r_offset, hip_r_t = self.get_opt_degree(lower_r_pos[1], lower_r_pos[2], 0, 0, 0, 360, 0, 360, r_offset)
 		hip_r_w = np.array([0,0,0])
+		print("hip_r_t = ", hip_r_t)
 
-		r_offset, knee_r_t = self.get_opt_degree(lower_r_pos[2], lower_r_pos[3], 0, 0, 316, 316, 0, 0, r_offset)
+		r_offset, knee_r_t = self.get_opt_degree(lower_r_pos[2], lower_r_pos[3], 0, 0, 0, 360, 0, 0, r_offset)
 		knee_r_t = [knee_r_t[1]]
 		knee_r_w = np.array([0])
+		print("knee_r_t = ", knee_r_t)
 
-		r_offset, ankle_r_t = self.get_opt_degree(lower_r_pos[3], lower_r_pos[4], 0, 0, 113, 113, 185, 185, r_offset)
+		r_offset, ankle_r_t = self.get_opt_degree(lower_r_pos[3], lower_r_pos[4], 0, 0, 0, 360, 0, 360, r_offset)
 		ankle_r_t = ankle_r_t[1:3]
 		ankle_r_w = np.array([0,0])
+		print("ankle_r_t = ", ankle_r_t)
 		return np.concatenate((root_p,root_u,root_l_t,root_l_w,hip_l_t,hip_l_w,knee_l_t,knee_l_w,ankle_l_t,ankle_l_w,root_r_t,root_r_w,hip_r_t,hip_r_w,knee_r_t,knee_r_w,ankle_r_t,ankle_r_w), axis=0)
 
 
@@ -118,11 +126,45 @@ class Calibration:
 		ankle_r_w = np.array([0,0])
 		return np.concatenate((root_p,root_u,root_l_t,root_l_w,root_r_t,root_r_w,hip_l_t,hip_l_w,knee_l_t,knee_l_w,ankle_l_t,ankle_l_w,hip_r_t,hip_r_w,knee_r_t,knee_r_w,ankle_r_t,ankle_r_w), axis=0)
 
-	def get_lower_frontward(self, idx, mode):
-		if mode == 'bruth_force':
-			return self.get_lower_frontward_bruth_force(self.data[idx])
+	def get_lower_frontward_cash_mode(self, data, filename):
+		root_p = np.array(data.joints[0].pos).reshape(-1)
+		root_u = np.array([0,0,0])
+		root_l_w = np.array([0,0,0])
+		hip_l_w = np.array([0,0,0])
+		knee_l_w = np.array([0])
+		ankle_l_w = np.array([0,0])
+		root_r_w = np.array([0,0,0])
+		hip_r_w = np.array([0,0,0])
+		knee_r_w = np.array([0])
+		ankle_r_w = np.array([0,0])
+		if filename == 'data/input_stand.txt':
+			root_l_t = [0, 195, 183]
+			hip_l_t = [0, 3, 271]
+			knee_l_t = [1]
+			ankle_l_t = [287, 9]
+			root_r_t = [0, 15, 183]
+			hip_r_t = [0, 354, 271]
+			knee_r_t = [360]
+			ankle_r_t = [70, 17]
+			return np.concatenate((root_p,root_u,root_l_t,root_l_w,hip_l_t,hip_l_w,knee_l_t,knee_l_w,ankle_l_t,ankle_l_w,root_r_t,root_r_w,hip_r_t,hip_r_w,knee_r_t,knee_r_w,ankle_r_t,ankle_r_w), axis=0)
+		elif filename == "data/input_sitting.txt":
+			root_l_t =  [0, 22, 181]
+			hip_l_t =  [0, 303, 275]
+			knee_l_t =  [51]
+			ankle_l_t =  [233, 180]
+			root_r_t =  [0, 202, 181]
+			hip_r_t =  [0, 51, 276]
+			knee_r_t =  [310]
+			ankle_r_t =  [47, 350]
+			return np.concatenate((root_p,root_u,root_l_t,root_l_w,hip_l_t,hip_l_w,knee_l_t,knee_l_w,ankle_l_t,ankle_l_w,root_r_t,root_r_w,hip_r_t,hip_r_w,knee_r_t,knee_r_w,ankle_r_t,ankle_r_w), axis=0)
 		else:
-			return self.get_lower_frontward_quat(self.data[idx])
+			print(filename)
+			return self.get_lower_frontward_brute_force(data)
+
+
+
+	def get_lower_frontward(self, idx, filename):
+		return self.get_lower_frontward_cash_mode(self.data[idx], filename)
 
 	def get_lower_length_avg(self):
 		cbr_num = len(self.data)
@@ -135,7 +177,7 @@ class Calibration:
 		lower_r_len_avg = np.array(lower_r_len).reshape(cbr_num,4).mean(axis=0)
 		return np.concatenate((lower_l_len_avg, lower_r_len_avg), axis=0)		
 
-	def get_init_mean(self):
-		lower_init_frontward = self.get_lower_frontward(50, 'bruth_force')
+	def get_init_mean(self, idx, filename):
+		lower_init_frontward = self.get_lower_frontward(idx, filename)
 		lower_init_backward = self.get_lower_length_avg()
 		return np.concatenate((lower_init_frontward, lower_init_backward), axis=0)

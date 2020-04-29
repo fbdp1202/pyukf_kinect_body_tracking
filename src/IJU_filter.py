@@ -38,7 +38,7 @@ class IJU_Filter:
 		self.next_filter = []
 		if here in prams.graph:
 			for nx in prams.graph[here]:
-				self.next_filter.append(Filter(prams, nx))
+				self.next_filter.append(IJU_Filter(prams, nx))
 
 	def trans_fun(self, state):
 		return np.matmul(self.trans_mat, np.array(state).reshape(len(state),1)).reshape(-1)
