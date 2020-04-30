@@ -100,7 +100,7 @@ class MJU_Lower_Params:
     	self.init_trans_cov = self.trans_cov * self.init_trans_cov_factor
 
     def set_trans_matrix(self):
-        self.fps = 3
+        self.fps = 10
         self.is_velocity = [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]
         tmp = np.eye(self.state_cov_total_dim)
 

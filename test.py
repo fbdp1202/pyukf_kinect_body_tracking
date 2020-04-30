@@ -13,6 +13,6 @@ def test_brute_force(filename, test_num, model, isplot=True, plot_mode='3D', Ipy
 		skeleton_draw(ground_data, estimate_data, test_num=10)
 
 if __name__ == '__main__':
-	test("data/input_stand.txt", 50, 'MJU', True, 'point', False, 50)
+	test("data/input_stand.txt", 50, 'MJU', True, '3D', False, 50)
 	# test("data/input_stand.txt", 50, 'IJU', True)
 	# test_brute_force("data/input_stand.txt", 50, 'IJU', True)

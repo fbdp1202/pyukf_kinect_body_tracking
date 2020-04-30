@@ -48,17 +48,21 @@ def interval_compasation(data, test_num, num):
 				new_data = new_data + [float(data[i][k][6])]
 	return (int)(len(new_data)/26/7), np.array(new_data).reshape((int)(len(new_data)/26/7),26,7)
 
-def init_simul(filename, test_num, cbr_num=50):
+def init_simul(filename, test_num, cbr_num=50, div_step=10):
 	data = read_data_skeleton(filename)
-	test_num, data = interval_compasation(data, test_num, 10)
+	new_test_num, data = interval_compasation(data, test_num, div_step)
 	skeletons = []
 	for d in data:
 		skeletons.append(Skeleton(d))
 
-	calibration = Calibration(skeletons[0:cbr_num+1])
+	cal_skeletons = []
+	for i in range(cbr_num):
+		cal_skeletons.append(skeletons[i*div_step])
+
+	calibration = Calibration(cal_skeletons)
 	init_mean = calibration.get_init_mean(0, filename)
 
-	return skeletons, init_mean, test_num
+	return skeletons, init_mean, new_test_num
 
 def make_filter(init_mean, model, init_cov):
 	ukf = None
@@ -98,7 +102,7 @@ def skeleton_draw(ground_data, estimate_data, plot_mode='3D', Ipython=False, tes
 def simulation_ukf(filename, test_num, model, cbr_num=50):
 	skeletons, init_mean, test_num = init_simul(filename, test_num, cbr_num)
 
-	init_cov = [1e-6, 1e-4, 1e-6, 1e-4, 1e-6, 1e-1, 1e-6, 1e-1, 1e-6, 1e-4, 1e-4, 100]
+	init_cov = [2e-8, 2e-6, 2e-8, 2e-6, 2e-8, 2e-3, 2e-8, 2e-3, 2e-8, 2e-6, 1e-4, 100]
 	ukf = make_filter(init_mean, model, init_cov)
 	mse_ground_data, mse_estimate_data, draw_ground_data, draw_estimate_data = run_ukf(ukf, skeletons, test_num)
 	mse_ret = mean_squared_error(mse_ground_data, mse_estimate_data, test_num)
