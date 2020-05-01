@@ -20,6 +20,7 @@ def test_all_save_img(filename, test_num, Ipython=False, cbr_num=50):
 
 if __name__ == '__main__':
 	test_all_save_img("data/input_stand.txt", 50, False, 50)
+	test_all_save_img("data/input_sitting.txt", 50, False, 50)
 	# test("data/input_stand.txt", 50, 'MJU', False)
 	# test("data/input_stand.txt", 50, 'IJU', False)
 	# test("data/input_stand.txt", 50, 'IJU', True, 'point', False, 50, save_img=True)
