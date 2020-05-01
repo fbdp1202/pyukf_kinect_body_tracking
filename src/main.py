@@ -1,4 +1,5 @@
 import sys
+import os
 sys.path.append('./code/')
 
 from skeleton import Skeleton
@@ -25,7 +26,7 @@ def check_time(function):
 
 def interval_compasation(data, test_num, num):
 	if num <= 0:
-		return data
+		return test_num, data
 
 	test_num = min(len(data)-1, test_num)
 	new_data = []
@@ -91,12 +92,36 @@ def run_ukf(ukf, skeletons, test_num):
 
 	return mse_ground_data, mse_estimate_data, draw_ground_data, draw_estimate_data
 
-def skeleton_draw(ground_data, estimate_data, plot_mode='3D', Ipython=False, test_num=1e9, sleep_t=1):
+def get_save_image_file_name(filename, model, plot_mode):
+	nfilename = 'result'
+	if not os.path.isdir(nfilename):
+		os.mkdir(nfilename)
+
+	nfilename = nfilename + '/' + filename.split('.')[0][5:]
+	if not os.path.isdir(nfilename):
+		os.mkdir(nfilename)
+
+	nfilename = nfilename + '/' + model
+	if not os.path.isdir(nfilename):
+		os.mkdir(nfilename)
+
+	nfilename = nfilename + '/' + plot_mode
+	if not os.path.isdir(nfilename):
+		os.mkdir(nfilename)
+
+	return nfilename
+
+def skeleton_draw(filename, model, ground_data, estimate_data, plot_mode='3D', Ipython=False, test_num=1e9, sleep_t=1, save_img=False):
 	canvas = Canvas()
+	img_name = ""
+	if save_img:
+		img_name = get_save_image_file_name(filename, model, plot_mode)
 	if plot_mode == '3D':
 		canvas.skeleton_3D_plot(ground_data, estimate_data, Ipython, test_num, sleep_t)
 	elif plot_mode == 'point':
-		canvas.skeleton_point_plot(ground_data, estimate_data, test_num)
+		canvas.skeleton_point_plot(ground_data, estimate_data, test_num, save_img, img_name)
+	elif plot_mode == 'length':
+		canvas.skeleton_length_plot(ground_data, estimate_data, test_num, save_img, img_name)
 
 @check_time
 def simulation_ukf(filename, test_num, model, cbr_num=50):

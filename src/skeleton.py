@@ -39,17 +39,10 @@ class Joint:
 		print("")
 
 class Skeleton:
-	def __init__(self):
-		self.joints = []
-		self.lower_l = [0, 12, 13, 14, 15]
-		self.lower_l_len = []
-		self.lower_r = [0, 16, 17, 18, 19]
-		self.lower_r_len = []
-
 	def __init__(self, data):
 		self.lower_l = [0, 12, 13, 14, 15]
-		self.lower_l_len = []
 		self.lower_r = [0, 16, 17, 18, 19]
+		self.lower_l_len = []
 		self.lower_r_len = []
 
 		self.joints = []

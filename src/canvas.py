@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from utils import *
 
 from mpl_toolkits.mplot3d import Axes3D
 from IPython.display import HTML
@@ -12,6 +13,10 @@ class Canvas:
 	def __init__(self):
 		self.skeleton_graph()
 		self.lower_idx = [0, 12, 13, 14, 15, 16, 17, 18, 19]
+		self.lower_l = [0, 12, 13, 14, 15]
+		self.lower_r = [0, 16, 17, 18, 19]
+		self.lower_l_s = [0, 1, 2, 3, 4]
+		self.lower_r_s = [0, 5, 6, 7, 8]
 
 	def skeleton_graph(self):
 		self.graph = {}
@@ -134,7 +139,7 @@ class Canvas:
 				if not isContinue:
 					break
 
-	def skeleton_point_plot(self, ground_data, estimate_data, test_num):
+	def skeleton_point_plot(self, ground_data, estimate_data, test_num, img_save=False, img_name=""):
 		test_num = min(test_num, len(ground_data))
 		x_grounds = []
 		y_grounds = []
@@ -189,14 +194,16 @@ class Canvas:
 		for i in range(0,9):
 			fig, axs = plt.subplots(nrows=2, ncols=3, constrained_layout=True)
 			axs[0][0].plot(idx, x_grounds[i], '-', color='red')
-			axs[0][0].plot(idx, x_estimates[i], 'o', color='blue')
+			axs[0][0].plot(idx, x_estimates[i], '-', color='blue')
 			axs[0][0].set_ylabel('position(mm)')
 			axs[0][0].set_title('X position')
 			axs[0][1].plot(idx, y_grounds[i], '-', color='red')
-			axs[0][1].plot(idx, y_estimates[i], 'o', color='blue')
+			axs[0][1].plot(idx, y_estimates[i], '-', color='blue')
 			axs[0][1].set_title('Y position')
-			axs[0][2].plot(idx, z_grounds[i], '-', color='red')
-			axs[0][2].plot(idx, z_estimates[i], 'o', color='blue')
+			axs[0][2].plot(idx, z_grounds[i], '-', color='red', label='ground')
+			axs[0][2].plot(idx, z_estimates[i], '-', color='blue', label='estimate')
+			axs[0][2].legend(loc="upper right")
+
 			axs[0][2].set_title('Z position {}'.format(word_name[i]))
 
 			axs[1][0].plot(idx, x_estimates[i] - x_grounds[i], '-', color='red')
@@ -206,5 +213,79 @@ class Canvas:
 			axs[1][1].set_xlabel('frame')
 			axs[1][2].plot(idx, z_estimates[i] - z_grounds[i], '-', color='red')
 			axs[1][2].set_xlabel('frame')
-		plt.show()
 
+			if img_save:
+				fig.savefig(img_name+'/'+str(i)+'_'+word_name[i]+'.png')
+				plt.close(fig)
+
+		if not img_save:
+			plt.show()
+
+	def cal_skeleton_length_ground(self, data):
+		lower_len = []
+		for i in range(len(self.lower_l)-1):
+			lower_len.append(get_distance(data[self.lower_l[i]], data[self.lower_l[i+1]]))
+		for i in range(len(self.lower_r)-1):
+			lower_len.append(get_distance(data[self.lower_r[i]], data[self.lower_r[i+1]]))
+		return lower_len
+
+	def cal_skeleton_length_estimate(self, data):
+		lower_len = []
+		for i in range(len(self.lower_l_s)-1):
+			sx = self.lower_l_s[i]*3
+			ex = self.lower_l_s[i+1]*3
+			lower_len.append(get_distance(data[sx:sx+3], data[ex:ex+3]))
+		for i in range(len(self.lower_r_s)-1):
+			sx = self.lower_r_s[i]*3
+			ex = self.lower_r_s[i+1]*3
+			lower_len.append(get_distance(data[sx:sx+3], data[ex:ex+3]))
+		return lower_len
+
+	def skeleton_length_plot(self, ground_data, estimate_data, test_num, img_save=False, img_name=""):
+		test_num = min(test_num, len(ground_data))
+		ground_l = {}
+		estimate_l = {}
+		for i in range(8):
+			ground_l[i] = []
+			estimate_l[i] = []
+
+		for i in range(test_num):
+			g_ret = self.cal_skeleton_length_ground(ground_data[i])
+			e_ret = self.cal_skeleton_length_estimate(estimate_data[i])
+			for j in range(8):
+				ground_l[j].append(g_ret[j])
+				estimate_l[j].append(e_ret[j])
+
+		for i in range(8):
+			ground_l[i] = np.array(ground_l[i])
+			estimate_l[i] = np.array(estimate_l[i])
+
+		idx = range(test_num)
+
+		word_name = {}
+		word_name[0] = "r_to_lh"
+		word_name[1] = "lh_to_lk"
+		word_name[2] = "lk_to_la"
+		word_name[3] = "la_to_lf"
+		word_name[4] = "r_to_rh"
+		word_name[5] = "rh_to_rk"
+		word_name[6] = "rk_to_ra"
+		word_name[7] = "ra_to_rf"
+
+		for i in range(8):
+			fig, axs = plt.subplots(nrows=2, ncols=1, constrained_layout=True)
+			axs[0].plot(idx, ground_l[i], '-', color='red', label='ground')
+			axs[0].plot(idx, estimate_l[i], '-', color='blue', label='estimate')
+			axs[0].set_ylabel('length(mm)')
+			axs[0].set_title('length {}'.format(word_name[i]))
+			axs[0].legend(loc="upper right")
+
+			axs[1].plot(idx, estimate_l[i] - ground_l[i], '-', color='red')
+			axs[1].set_xlabel('frame')
+			axs[1].set_ylabel('error(mm)')
+			if img_save:
+				fig.savefig(img_name+'/'+str(i)+'_'+word_name[i]+'.png')
+				plt.close(fig)
+
+		if not img_save:
+			plt.show()
