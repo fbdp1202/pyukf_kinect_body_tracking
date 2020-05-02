@@ -48,27 +48,27 @@ class MJU_Lower_Params:
     	self.set_trans_matrix()
 
     def set_state_covariance(self, init_cov):
-        self.root_p = init_cov[0]
-        self.root_v = init_cov[1]
-        self.root_l_t = self.root_r_t = init_cov[2]
-        self.root_l_w = self.root_r_w = init_cov[3]
-        self.hip_l_t = self.hip_r_t = init_cov[4]
-        self.hip_l_w = self.hip_r_w = init_cov[5]
-        self.knee_l_t = self.knee_r_t = init_cov[6]
-        self.knee_l_w = self.knee_r_w = init_cov[7]
-        self.ankle_l_t = self.ankle_r_t = init_cov[8]
-        self.ankle_l_w = self.ankle_r_w = init_cov[9]
-        self.link_length = 1e-9
-        self.state_cov_list = [self.root_p,self.root_v,self.root_l_t,self.root_l_w,self.hip_l_t,self.hip_l_w,self.knee_l_t,self.knee_l_w,self.ankle_l_t,self.ankle_l_w,self.root_r_t,self.root_r_w,self.hip_r_t,self.hip_r_w,self.knee_r_t,self.knee_r_w,self.ankle_r_t,self.ankle_r_w,self.link_length]
+        root_p = init_cov[0]
+        root_v = init_cov[1]
+        root_l_t = root_r_t = init_cov[2]
+        root_l_w = root_r_w = init_cov[3]
+        hip_l_t = hip_r_t = init_cov[4]
+        hip_l_w = hip_r_w = init_cov[5]
+        knee_l_t = knee_r_t = init_cov[6]
+        knee_l_w = knee_r_w = init_cov[7]
+        ankle_l_t = ankle_r_t = init_cov[8]
+        ankle_l_w = ankle_r_w = init_cov[9]
+        link_length = 1e-9
+        self.state_cov_list = [root_p,root_v,root_l_t,root_l_w,hip_l_t,hip_l_w,knee_l_t,knee_l_w,ankle_l_t,ankle_l_w,root_r_t,root_r_w,hip_r_t,hip_r_w,knee_r_t,knee_r_w,ankle_r_t,ankle_r_w,link_length]
 
     def set_state_dim(self):
-        self.root_dim = 3
-        self.root_l_dim =  self.root_r_dim = 3
-        self.hip_l_dim = self.hip_r_dim = 3
-        self.knee_l_dim = self.knee_r_dim = 1
-        self.ankle_l_dim = self.ankle_r_dim = 2
-        self.link_length = 8
-        self.state_cov_dim_list = [self.root_dim,self.root_dim,self.root_l_dim,self.root_l_dim,self.hip_l_dim,self.hip_l_dim,self.knee_l_dim,self.knee_l_dim,self.ankle_l_dim,self.ankle_l_dim,self.root_r_dim,self.root_r_dim,self.hip_r_dim,self.hip_r_dim,self.knee_r_dim,self.knee_r_dim,self.ankle_r_dim,self.ankle_r_dim,self.link_length]
+        root_dim = 3
+        root_l_dim =  root_r_dim = 3
+        hip_l_dim = hip_r_dim = 3
+        knee_l_dim = knee_r_dim = 1
+        ankle_l_dim = ankle_r_dim = 2
+        link_length = 8
+        self.state_cov_dim_list = [root_dim,root_dim,root_l_dim,root_l_dim,hip_l_dim,hip_l_dim,knee_l_dim,knee_l_dim,ankle_l_dim,ankle_l_dim,root_r_dim,root_r_dim,hip_r_dim,hip_r_dim,knee_r_dim,knee_r_dim,ankle_r_dim,ankle_r_dim,link_length]
         self.state_cov_total_dim = sum(self.state_cov_dim_list)
 
     def gen_trans_covariance(self):
@@ -161,27 +161,38 @@ class MJU_Upper_Params:
         self.set_trans_matrix()
 
     def set_state_covariance(self, init_cov):
-        self.root_p = init_cov[0]
-        self.root_v = init_cov[1]
-        self.root_l_t = self.root_r_t = init_cov[2]
-        self.root_l_w = self.root_r_w = init_cov[3]
-        self.hip_l_t = self.hip_r_t = init_cov[4]
-        self.hip_l_w = self.hip_r_w = init_cov[5]
-        self.knee_l_t = self.knee_r_t = init_cov[6]
-        self.knee_l_w = self.knee_r_w = init_cov[7]
-        self.ankle_l_t = self.ankle_r_t = init_cov[8]
-        self.ankle_l_w = self.ankle_r_w = init_cov[9]
-        self.link_length = 1e-9
-        self.state_cov_list = [self.root_p,self.root_v,self.root_l_t,self.root_l_w,self.hip_l_t,self.hip_l_w,self.knee_l_t,self.knee_l_w,self.ankle_l_t,self.ankle_l_w,self.root_r_t,self.root_r_w,self.hip_r_t,self.hip_r_w,self.knee_r_t,self.knee_r_w,self.ankle_r_t,self.ankle_r_w,self.link_length]
+        root_p, root_v = init_cov[0:2]
+        s_root_t, s_root_w = init_cov[2:4]
+        spine_naval_t, spine_naval_w = init_cov[4:6]
+        l_spine_chest_t, l_spine_chest_w = init_cov[6:8]
+        l_shoulder_t, l_shoulder_w = init_cov[8:10]
+        l_shoulder_center_t, l_shoulder_center_w = init_cov[10:12]
+        l_elbow_t, l_elbow_w = init_cov[12:14]
+        r_spine_chest_t, r_spine_chest_w = init_cov[6:8]
+        r_shoulder_t, r_shoulder_w = init_cov[8:10]
+        r_shoulder_center_t, r_shoulder_center_w = init_cov[10:12]
+        r_elbow_t, r_elbow_w = init_cov[12:14]
+        u_spine_chest_t, u_spine_chest_w = init_cov[14:16]
+        neck_t, neck_w = init_cov[16:18]
+        link_length = 1e-9
+        self.state_cov_list = [root_p,root_v,s_root_t,s_root_w,spine_naval_t,spine_naval_w,l_spine_chest_t,l_spine_chest_w,l_shoulder_t,l_shoulder_w,l_shoulder_center_t,l_shoulder_center_w,l_elbow_t,l_elbow_w,r_spine_chest_t,r_spine_chest_w,r_shoulder_t,r_shoulder_w,r_shoulder_center_t,r_shoulder_center_w,r_elbow_t,r_elbow_w,u_spine_chest_t,u_spine_chest_w,neck_t,neck_w,link_length]
 
     def set_state_dim(self):
-        self.root_dim = 3
-        self.root_l_dim =  self.root_r_dim = 3
-        self.hip_l_dim = self.hip_r_dim = 3
-        self.knee_l_dim = self.knee_r_dim = 1
-        self.ankle_l_dim = self.ankle_r_dim = 2
-        self.link_length = 8
-        self.state_cov_dim_list = [self.root_dim,self.root_dim,self.root_l_dim,self.root_l_dim,self.hip_l_dim,self.hip_l_dim,self.knee_l_dim,self.knee_l_dim,self.ankle_l_dim,self.ankle_l_dim,self.root_r_dim,self.root_r_dim,self.hip_r_dim,self.hip_r_dim,self.knee_r_dim,self.knee_r_dim,self.ankle_r_dim,self.ankle_r_dim,self.link_length]
+        root_dim = 3
+        s_root_dim = 3
+        spine_naval_dim = 3
+        l_spine_chest_dim = 3
+        l_shoulder_dim = 3
+        l_shoulder_center_dim = 3
+        l_elbow_dim = 1
+        r_spine_chest_dim = 3
+        r_shoulder_dim = 3
+        r_shoulder_center_dim = 3
+        r_elbow_dim = 1
+        u_spine_chest_dim = 3
+        neck_dim = 3
+        link_length_dim = 10
+        self.state_cov_dim_list = [root_dim,root_dim,s_root_dim,s_root_dim,spine_naval_dim,spine_naval_dim,l_spine_chest_dim,l_spine_chest_dim,l_shoulder_dim,l_shoulder_dim,l_shoulder_center_dim,l_shoulder_center_dim,l_elbow_dim,l_elbow_dim,r_spine_chest_dim,r_spine_chest_dim,r_shoulder_dim,r_shoulder_dim,r_shoulder_center_dim,r_shoulder_center_dim,r_elbow_dim,r_elbow_dim,u_spine_chest_dim,u_spine_chest_dim,neck_dim,neck_dim,link_length_dim]
         self.state_cov_total_dim = sum(self.state_cov_dim_list)
 
     def gen_trans_covariance(self):
@@ -201,7 +212,7 @@ class MJU_Upper_Params:
         self.gen_trans_covariance()
 
     def set_obs_covariance(self, init_obs_cov_factor):
-        self.obs_cov_dim = 27
+        self.obs_cov_dim = 39
         self.obs_cov_factor = init_obs_cov_factor
         self.obs_cov = np.eye(self.obs_cov_dim)*self.obs_cov_factor
 
@@ -214,7 +225,7 @@ class MJU_Upper_Params:
 
     def set_trans_matrix(self):
         self.fps = 10
-        self.is_velocity = [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]
+        self.is_velocity = [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]
         tmp = np.eye(self.state_cov_total_dim)
 
         idx = 0
