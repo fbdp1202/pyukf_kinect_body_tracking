@@ -130,8 +130,20 @@ Upper body model
         r_elbow:            1D(2)                       theta(y),       w(y),       ;
         u_spine_chest:      3D(6)                       theta(x,y,z),   w(x,y,z),   ;
         neck:               3D(6)                       theta(x,y,z),   w(x,y,z),   ;
+        L_root_spine:       1D(1)   L                                               ,
+        L_spine_chest:      1D(1)   L                                               ,
+        L_l_chest_sh:       1D(1)   L                                               ,
+        L_l_sh_shc:         1D(1)   L                                               ,
+        L_l_shc_elbow:      1D(1)   L                                               ,
+        L_l_elbow_wrist:    1D(1)   L                                               ,
+        L_r_chest_sh:       1D(1)   L                                               ,
+        L_r_sh_shc:         1D(1)   L                                               ,
+        L_r_shc_elbow:      1D(1)   L                                               ,
+        L_r_elbow_wrist:    1D(1)   L                                               ,
+        L_chest_neck:       1D(1)   L                                               ,
+        L_neck_head:        1D(1)   L                                               ,
     ]
-    total vector length(DP): 70
+    total vector length(DP): 82
 
     measurement vector
     y = [
@@ -153,11 +165,11 @@ Upper body model
 '''
 
 class MJU_Upper_Params:
-    def __init__(self, init_mean, init_cov=[1e-6, 1e-4, 1e-6, 1e-4, 1e-6, 1e-1, 1e-6, 1e-1, 1e-6, 1e-4, 1e-4, 100]):
-        self.set_trans_covariance(init_cov[:10])
-        self.set_obs_covariance(init_cov[10])
+    def __init__(self, init_mean, init_cov=[]):
+        self.set_trans_covariance(init_cov[:18])
+        self.set_obs_covariance(init_cov[19])
         self.set_mean(init_mean)
-        self.set_init_trans_cov(init_cov[11])
+        self.set_init_trans_cov(init_cov[20])
         self.set_trans_matrix()
 
     def set_state_covariance(self, init_cov):
@@ -191,7 +203,7 @@ class MJU_Upper_Params:
         r_elbow_dim = 1
         u_spine_chest_dim = 3
         neck_dim = 3
-        link_length_dim = 10
+        link_length_dim = 12
         self.state_cov_dim_list = [root_dim,root_dim,s_root_dim,s_root_dim,spine_naval_dim,spine_naval_dim,l_spine_chest_dim,l_spine_chest_dim,l_shoulder_dim,l_shoulder_dim,l_shoulder_center_dim,l_shoulder_center_dim,l_elbow_dim,l_elbow_dim,r_spine_chest_dim,r_spine_chest_dim,r_shoulder_dim,r_shoulder_dim,r_shoulder_center_dim,r_shoulder_center_dim,r_elbow_dim,r_elbow_dim,u_spine_chest_dim,u_spine_chest_dim,neck_dim,neck_dim,link_length_dim]
         self.state_cov_total_dim = sum(self.state_cov_dim_list)
 
