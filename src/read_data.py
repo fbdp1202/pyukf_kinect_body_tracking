@@ -10,9 +10,9 @@ def read_data_skeleton(filename):
 		refix = re.findall('-*[0-9]+.[0-9]+e*-*[0-9]*', line)
 		data = data + refix
 
-	if filename == 'data/input_stand.txt':
-		data = np.array(data).reshape((int)(l/26),26,7)
-	else:
-		data = np.array(data).reshape(l,26,7)
-
+	data = np.array(data).reshape(l,32,7)
 	return data
+
+if __name__ == '__main__':
+	data = read_data_skeleton('../data/standing_30sec.txt')
+	print(data.shape)

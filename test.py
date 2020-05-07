@@ -2,28 +2,27 @@ import sys
 sys.path.append('./src/')
 from main import *
 
-def test(filename, test_num, model, isplot=True, plot_mode='3D', Ipython=False, cbr_num=50, save_img=False):
-	ground_data, estimate_data = simulation_ukf(filename, test_num, model, cbr_num)
-	if isplot:
-		skeleton_draw(filename, model, ground_data, estimate_data, plot_mode, Ipython, save_img=save_img)
+def test_skeleton_filter(person_name, pos_mode, test_num=1e9, cbr_num=1e9, model='ukf'):
+	filename = merge_skeleton_data('data/skeleton_data/' + person_name + '/' + pos_mode)
+	ground_data, estimate_data = simulation_ukf(filename, test_num, cbr_num, model)
+	save_skeleton_data_to_csv(person_name, pos_mode, ground_data, estimate_data, model)
 
-def test_brute_force(filename, test_num, model, isplot=True, plot_mode='3D', Ipython=False, cbr_num=50):
-	ground_data, estimate_data = simulation_ukf_brute_force(filename, test_num, model, cbr_num)
-	if isplot:
-		skeleton_draw(ground_data, estimate_data, test_num=10)
+def test_skeleton_draw(person_name, pos_mode, plot_3D=False, model='ukf'):
+	ground_data, estimate_data = read_skeleton_data_from_csv(person_name, pos_mode, model)
+	skeleton_draw(person_name, pos_mode, model, ground_data, estimate_data, plot_3D)
 
-def test_all_save_img(filename, test_num, Ipython=False, cbr_num=50):
-	test(filename, test_num, 'IJU', True, 'point', Ipython, cbr_num, save_img=True)
-	test(filename, test_num, 'IJU', True, 'length', Ipython, cbr_num, save_img=True)
-	test(filename, test_num, 'MJU', True, 'point', Ipython, cbr_num, save_img=True)
-	test(filename, test_num, 'MJU', True, 'length', Ipython, cbr_num, save_img=True)
+def test_all_save_img(filename, test_num=1e9, cbr_num=1e9):
+	test(filename, test_num, 'ukf', True, 'point', cbr_num, save_img=True)
+	test(filename, test_num, 'ukf', True, 'length', cbr_num, save_img=True)
+
+def test_one_person_all_mode(person_name, test_num=1e9, cbr_num=1e9, model='ukf'):
+	folder_name = 'data/skeleton_data/' + person_name
+	dir_list = get_dir_name(folder_name)
+	for pos_mode in dir_list:
+		test_skeleton_filter(person_name, pos_mode)
 
 if __name__ == '__main__':
-	test_all_save_img("data/input_stand.txt", 50, False, 50)
-	test_all_save_img("data/input_sitting.txt", 50, False, 50)
-	# test("data/input_stand.txt", 50, 'MJU', False)
-	# test("data/input_stand.txt", 50, 'IJU', False)
-	# test("data/input_stand.txt", 50, 'IJU', True, 'point', False, 50, save_img=True)
-	# test("data/input_stand.txt", 50, 'MJU', True, 'point', False, 50, save_img=True)
-	# test("data/input_stand.txt", 50, 'IJU', True)
-	# test_brute_force("data/input_stand.txt", 50, 'IJU', True)
+	# test_skeleton_filter("jiwon", "crossing_arms_30sec", test_num=10)
+	test_skeleton_draw("jiwon", "crossing_arms_30sec", True)
+	# test_one_person_all_mode("jiwon")
+	# test("data/input_stand.txt", 50, 'ukf', True, 'point', False, 50, save_img=True)

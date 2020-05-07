@@ -5,13 +5,14 @@ sys.path.append('./code/')
 from skeleton import Skeleton
 from read_data import *
 from calibration import Calibration
-from IJU_filter import IJU_Filter_Controler
-from MJU_filter import MJU_Filter_Controler
+from ukf_filter import ukf_Filter_Controler
 from canvas import Canvas
 from regression import *
 
 import time
 from functools import wraps
+
+import os
 
 def check_time(function):
 	@wraps(function)
@@ -24,150 +25,162 @@ def check_time(function):
 
 	return measure
 
-def interval_compasation(data, test_num, num):
-	if num <= 0:
-		return test_num, data
+def get_dir_name(dir):
+	dir_list = []
+	for name in os.listdir(dir):
+		path = dir + '/' + name
+		if not os.path.isfile(path):
+			dir_list.append(name)
+	return dir_list
 
-	test_num = min(len(data)-1, test_num)
-	new_data = []
-	for i in range(test_num):
-		step_x = []
-		step_y = []
-		step_z = []
-		for j in range(len(data[i])):
-			step_x = step_x + [(float(data[i+1][j][0]) - float(data[i][j][0]))/(float)(num)]
-			step_y = step_y + [(float(data[i+1][j][1]) - float(data[i][j][1]))/(float)(num)]
-			step_z = step_z + [(float(data[i+1][j][2]) - float(data[i][j][2]))/(float)(num)]
-		for j in range(num):
-			for k in range(len(data[i])):
-				new_data = new_data + [float(data[i][k][0]) + step_x[k] * j]
-				new_data = new_data + [float(data[i][k][1]) + step_y[k] * j]
-				new_data = new_data + [float(data[i][k][2]) + step_z[k] * j]
-				new_data = new_data + [float(data[i][k][3])]
-				new_data = new_data + [float(data[i][k][4])]
-				new_data = new_data + [float(data[i][k][5])]
-				new_data = new_data + [float(data[i][k][6])]
-	return (int)(len(new_data)/26/7), np.array(new_data).reshape((int)(len(new_data)/26/7),26,7)
+def scan_dir(dir):
+	dir_list = []
+	for name in os.listdir(dir):
+		path = dir + '/' + name
+		if os.path.isfile(path):
+			dir_list.append(path)
+	return dir_list
 
-def init_simul(filename, test_num, cbr_num=50, div_step=10):
+def merge_skeleton_data(folder_name):
+	save_file_name = folder_name + '.txt' 
+	dir_list = scan_dir(folder_name)
+
+	wf = open(save_file_name, 'w')
+	for filename in dir_list:
+		f = open(filename, 'r')
+		line = f.readline()
+		wf.write(line)
+	wf.close()
+	return save_file_name
+
+@check_time
+def init_simul(filename, test_num, cbr_num=50, div_step=1):
 	data = read_data_skeleton(filename)
-	new_test_num, data = interval_compasation(data, test_num, div_step)
-	skeletons = []
-	for d in data:
-		skeletons.append(Skeleton(d))
+	# test_num, data = interval_compasation(data, test_num, div_step)
+	test_num = min(test_num, len(data))
 
+	skeletons = []
+	for i in range(test_num):
+		skeletons.append(Skeleton(data[i]))
+
+	cbr_num = min(test_num, cbr_num)
 	cal_skeletons = []
 	for i in range(cbr_num):
 		cal_skeletons.append(skeletons[i*div_step])
 
 	calibration = Calibration(cal_skeletons)
-	init_mean = calibration.get_init_mean(0, filename)
+	lower_init_mean, upper_init_mean = calibration.get_init_mean(0, filename)
 
-	return skeletons, init_mean, new_test_num
+	return skeletons, lower_init_mean, upper_init_mean, test_num
 
-def make_filter(init_mean, model, init_cov):
-	ukf = None
-	if model == 'IJU':
-		ukf = IJU_Filter_Controler(init_mean, init_cov)
-	elif model == 'MJU':
-		ukf = MJU_Filter_Controler(init_mean, init_cov)
+@check_time
+def make_filter(lower_init_mean,  lower_init_cov, upper_init_mean, upper_init_cov, model):
+	flt = None
+	if model == 'ukf':
+		flt = ukf_Filter_Controler(lower_init_mean, lower_init_cov, upper_init_mean, upper_init_cov)
 	else:
 		print(model, "is not exist model name")
-	return ukf
+	return flt
 
+@check_time
 def run_ukf(ukf, skeletons, test_num):
-	mse_ground_data = []
-	mse_estimate_data = []
-	draw_ground_data = []
-	draw_estimate_data = []
+	ground_data = []
+	estimate_data = []
 
 	test_num = min(len(skeletons), test_num)
+	print("total test is {}".format(test_num))
+	print("test_num:", end=' ')
 	for i in range(test_num):
-		ret = ukf.update(skeletons[i].get_measurement())
-		mse_ground_data = np.append(mse_ground_data, skeletons[i].get_lower_measurement()).reshape(-1)
-		mse_estimate_data = np.append(mse_estimate_data, np.array(ret).reshape(-1))
+		curr_input = skeletons[i].get_measurement()
+		ground_data.append(curr_input)
+		estimate_data.append(ukf.update(curr_input))
+		if i % 10 == 0:
+			print(i, end=' ')
+	print('')
 
-		draw_ground_data.append(skeletons[i].get_measurement())
-		draw_estimate_data.append(ret)
+	return ground_data, estimate_data
 
-	return mse_ground_data, mse_estimate_data, draw_ground_data, draw_estimate_data
+def make_folder(folder_name):
+	if not os.path.isdir(folder_name):
+		os.mkdir(folder_name)
+	return folder_name
 
-def get_save_image_file_name(filename, model, plot_mode):
-	nfilename = 'result'
-	if not os.path.isdir(nfilename):
-		os.mkdir(nfilename)
+def get_save_skeleton_data_folder_name(person_name, pos_mode, model):
+	folder_name = make_folder('result')
+	folder_name = make_folder(folder_name + '/' + person_name)
+	folder_name = make_folder(folder_name + '/' + pos_mode)
+	folder_name = make_folder(folder_name + '/' + model)
+	return folder_name + '/'
 
-	nfilename = nfilename + '/' + filename.split('.')[0][5:]
-	if not os.path.isdir(nfilename):
-		os.mkdir(nfilename)
+def save_csv(folder_name, filename, data):
+	filename = folder_name + filename
+	f = open(filename, "w", encoding="UTF-8")
+	for i in range(len(data)):
+		for j in range(len(data[i])):
+			for k in range(3):
+				f.write(str(data[i][j][k]))
+				if j == (len(data[i])-1) and k == 2:
+					f.write('\n')
+				else:
+					f.write(',')
 
-	nfilename = nfilename + '/' + model
-	if not os.path.isdir(nfilename):
-		os.mkdir(nfilename)
+def save_skeleton_data_to_csv(person_name, pos_mode, ground_data, estimate_data, model):
+	csv_folder_name = get_save_skeleton_data_folder_name(person_name, pos_mode, model)
+	save_csv(csv_folder_name, 'ground_data.csv', ground_data)
+	save_csv(csv_folder_name, 'estimate_data.csv', estimate_data)
 
-	nfilename = nfilename + '/' + plot_mode
-	if not os.path.isdir(nfilename):
-		os.mkdir(nfilename)
+def read_csv(filename):
+	data = []
+	with open(filename, 'r') as reader:
+		for line in reader:
+			fields = line.split(',')
+			fields[len(fields)-1] = fields[len(fields)-1].replace('\n', '')
+			for i in range(len(fields)):
+				data.append(float(fields[i]))
 
-	return nfilename
+	data = np.array(data).reshape((int)(len(data)/32/3), 32, 3)
+	skeletons = []
+	for d in data:
+		skeletons.append(Skeleton(d))
+	return skeletons
 
-def skeleton_draw(filename, model, ground_data, estimate_data, plot_mode='3D', Ipython=False, test_num=1e9, sleep_t=1, save_img=False):
+def read_skeleton_data_from_csv(person_name, pos_mode, model):
+	csv_folder_name = get_save_skeleton_data_folder_name(person_name, pos_mode, model)
+	ground_data = read_csv(csv_folder_name + 'ground_data.csv')
+	estimate_data = read_csv(csv_folder_name + 'estimate_data.csv')
+	return ground_data, estimate_data
+
+def get_save_image_file_name(person_name, pos_mode, model, plot_mode):
+	folder_name = make_folder('result')
+	folder_name = make_folder(folder_name + '/' + person_name)
+	folder_name = make_folder(folder_name + '/' + pos_mode)
+	folder_name = make_folder(folder_name + '/' + model)
+	folder_name = make_folder(folder_name + '/' + plot_mode)
+	return folder_name + '/'
+
+def skeleton_draw(person_name, pos_mode, model, ground_data, estimate_data, plot_3D='3D', test_num=1e9, sleep_t=1):
 	canvas = Canvas()
-	img_name = ""
-	if save_img:
-		img_name = get_save_image_file_name(filename, model, plot_mode)
-	if plot_mode == '3D':
-		canvas.skeleton_3D_plot(ground_data, estimate_data, Ipython, test_num, sleep_t)
-	elif plot_mode == 'point':
-		canvas.skeleton_point_plot(ground_data, estimate_data, test_num, save_img, img_name)
-	elif plot_mode == 'length':
-		canvas.skeleton_length_plot(ground_data, estimate_data, test_num, save_img, img_name)
+	img_name_point = get_save_image_file_name(person_name, pos_mode, model, 'point')
+	img_name_length = get_save_image_file_name(person_name, pos_mode, model, 'length')
+	if plot_3D:
+		canvas.skeleton_3D_plot(ground_data, estimate_data, test_num, sleep_t)
+
+	canvas.skeleton_point_plot(ground_data, estimate_data, test_num, img_name_point)
+	canvas.skeleton_length_plot(ground_data, estimate_data, test_num, img_name_length)
+
+def set_lower_init_cov(value_cov=2e-8, velo_cov_0=2e-6, velo_cov_1=2e-3, len_cov=1e-10, obs_cov_factor=1e-4, trans_factor=100):
+	return [value_cov, velo_cov_0,value_cov, velo_cov_0,value_cov, velo_cov_1,value_cov, velo_cov_1,value_cov, velo_cov_0, len_cov,obs_cov_factor, trans_factor]
+
+def set_upper_init_cov(value_cov=1e-7, velo_cov=1e-4, len_cov=1e-10, obs_cov_factor=1e-4, trans_factor=100):
+	return [value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,len_cov,obs_cov_factor,trans_factor]
 
 @check_time
-def simulation_ukf(filename, test_num, model, cbr_num=50):
-	skeletons, init_mean, test_num = init_simul(filename, test_num, cbr_num)
+def simulation_ukf(filename, test_num=1e9, cbr_num=1e9, model='ukf'):
+	skeletons, lower_init_mean, upper_init_mean, test_num = init_simul(filename, test_num, cbr_num)
 
-	init_cov = [2e-8, 2e-6, 2e-8, 2e-6, 2e-8, 2e-3, 2e-8, 2e-3, 2e-8, 2e-6, 1e-4, 100]
-	ukf = make_filter(init_mean, model, init_cov)
-	mse_ground_data, mse_estimate_data, draw_ground_data, draw_estimate_data = run_ukf(ukf, skeletons, test_num)
-	mse_ret = mean_squared_error(mse_ground_data, mse_estimate_data, test_num)
-	print("mean square error: ", mse_ret)
-	
-	return draw_ground_data, draw_estimate_data
+	lower_init_cov = set_lower_init_cov()
+	upper_init_cov = set_upper_init_cov()
+	flt = make_filter(lower_init_mean, lower_init_cov, upper_init_mean, upper_init_cov, model)
 
-@check_time
-def simulation_ukf_brute_force(filename, test_num, model, cbr_num=50):
-	skeletons, init_mean, test_num = init_simul(filename, test_num, cbr_num)
-
-	mse_min = 1e9
-	mes_min_cov = []
-	mes_min_v = []
-	mes_min_ground = []
-	mes_min_estimate = []
-
-# set covariance
-	pos_cov_list = [1e-8, 1e-6, 5]
-	velo_cov_list = [1e-9, 1e-8, 3]
-	velo_cov_2_list = [1e-9, 2e-8, 3]
-	for pos_cov in np.linspace(pos_cov_list[0], pos_cov_list[1], num=pos_cov_list[2]):
-		for velo_cov_1 in np.linspace(velo_cov_list[0], velo_cov_list[1], num=velo_cov_list[2]):
-			for velo_cov_2 in np.linspace(velo_cov_2_list[0], velo_cov_2_list[1], num=velo_cov_2_list[2]):
-				init_cov = [pos_cov, velo_cov_1, pos_cov, velo_cov_1, pos_cov, velo_cov_2, pos_cov, velo_cov_2, pos_cov, velo_cov_1, 1e-4, 100]
-				init_min_v = [pos_cov, velo_cov_1, velo_cov_2]
-				ukf = make_filter(init_mean, model, init_cov)
-				mse_ground_data, mse_estimate_data, draw_ground_data, draw_estimate_data = run_ukf(ukf, skeletons, test_num)
-				mse_ret = mean_squared_error(mse_ground_data, mse_estimate_data, test_num) 
-				if mse_ret < mse_min:
-					mse_min = mse_ret
-					mes_min_v = init_min_v
-					mes_min_ground = draw_ground_data
-					mes_min_estimate = draw_estimate_data
-		print(pos_cov, mes_min_v)
-	print(mes_min_v)
-
-	return mes_min_ground, mes_min_estimate
-
-if __name__ == "__main__":
-	ground_data, estimate_data = simulation_ukf('../data/input_stand.txt', 50, 'IJU', 50)
-	if isplot:
-		skeleton_draw(ground_data, estimate_data)
+	ground_data, estimate_data = run_ukf(flt, skeletons, test_num)
+	return ground_data, estimate_data
