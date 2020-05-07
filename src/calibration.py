@@ -41,9 +41,9 @@ class Calibration:
 		min_dist= 1e9
 		min_degree = [0,0,0]
 		BposW = []
-		for i in range(x_min, x_max+1):
-			for j in range(y_min, y_max+1):
-				for k in range(z_min, z_max+1):
+		for i in range(x_min, x_max+1, 5):
+			for j in range(y_min, y_max+1, 5):
+				for k in range(z_min, z_max+1, 5):
 					rot_mat = R.from_euler('xyz', [i,j,k], degrees=True).as_matrix()
 					rot_mat = np.matmul(offset, rot_mat)
 					BposW = np.matmul(rot_mat, AposB) + np.array(A_pos).reshape(3,1)
