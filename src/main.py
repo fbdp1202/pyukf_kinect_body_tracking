@@ -41,6 +41,7 @@ def scan_dir(dir):
 			dir_list.append(path)
 	return dir_list
 
+@check_time
 def merge_skeleton_data(folder_name):
 	save_file_name = folder_name + '.txt' 
 	dir_list = scan_dir(folder_name)
@@ -124,6 +125,7 @@ def save_csv(folder_name, filename, data):
 				else:
 					f.write(',')
 
+@check_time
 def save_skeleton_data_to_csv(person_name, pos_mode, ground_data, estimate_data, model):
 	csv_folder_name = get_save_skeleton_data_folder_name(person_name, pos_mode, model)
 	save_csv(csv_folder_name, 'ground_data.csv', ground_data)
@@ -144,6 +146,7 @@ def read_csv(filename):
 		skeletons.append(Skeleton(d))
 	return skeletons
 
+@check_time
 def read_skeleton_data_from_csv(person_name, pos_mode, model):
 	csv_folder_name = get_save_skeleton_data_folder_name(person_name, pos_mode, model)
 	ground_data = read_csv(csv_folder_name + 'ground_data.csv')
@@ -158,15 +161,17 @@ def get_save_image_file_name(person_name, pos_mode, model, plot_mode):
 	folder_name = make_folder(folder_name + '/' + plot_mode)
 	return folder_name + '/'
 
-def skeleton_draw(person_name, pos_mode, model, ground_data, estimate_data, plot_3D='3D', test_num=1e9, sleep_t=1):
+@check_time
+def skeleton_draw(person_name, pos_mode, model, ground_data, estimate_data, sleep_t=100):
 	canvas = Canvas()
 	img_name_point = get_save_image_file_name(person_name, pos_mode, model, 'point')
 	img_name_length = get_save_image_file_name(person_name, pos_mode, model, 'length')
-	if plot_3D:
-		canvas.skeleton_3D_plot(ground_data, estimate_data, test_num, sleep_t)
+	img_name_3D = get_save_image_file_name(person_name, pos_mode, model, 'plot_3D')
+	# 	canvas.skeleton_3D_plot(ground_data, estimate_data)
 
-	canvas.skeleton_point_plot(ground_data, estimate_data, test_num, img_name_point)
-	canvas.skeleton_length_plot(ground_data, estimate_data, test_num, img_name_length)
+	canvas.skeleton_3D_animation_save(ground_data, estimate_data, sleep_t, img_name_3D)
+	canvas.skeleton_point_plot(ground_data, estimate_data, img_name_point)
+	canvas.skeleton_length_plot(ground_data, estimate_data, img_name_length)
 
 def set_lower_init_cov(value_cov=2e-8, velo_cov_0=2e-6, velo_cov_1=2e-3, len_cov=1e-10, obs_cov_factor=1e-4, trans_factor=100):
 	return [value_cov, velo_cov_0,value_cov, velo_cov_0,value_cov, velo_cov_1,value_cov, velo_cov_1,value_cov, velo_cov_0, len_cov,obs_cov_factor, trans_factor]
@@ -175,7 +180,7 @@ def set_upper_init_cov(value_cov=1e-7, velo_cov=1e-4, len_cov=1e-10, obs_cov_fac
 	return [value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,len_cov,obs_cov_factor,trans_factor]
 
 @check_time
-def simulation_ukf(filename, test_num=1e9, cbr_num=1e9, model='ukf'):
+def simulation_ukf(filename, test_num, cbr_num, model):
 	skeletons, lower_init_mean, upper_init_mean, test_num = init_simul(filename, test_num, cbr_num)
 
 	lower_init_cov = set_lower_init_cov()

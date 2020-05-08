@@ -1,14 +1,31 @@
+import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
-import matplotlib.animation
+import matplotlib.animation as animation
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from utils import *
 
 from mpl_toolkits.mplot3d import Axes3D
 
+import time
+from functools import wraps
+
+def check_time(function):
+	@wraps(function)
+	def measure(*args, **kwargs):
+		start_time = time.time()
+		result = function(*args, **kwargs)
+		end_time = time.time()
+		print(f"@check_time: {function.__name__} took {end_time - start_time}")
+		return result
+
+	return measure
+
 class Canvas:
 	def __init__(self):
 		self.graph = self.skeleton_graph()
+		self.quivers = {}
 
 	def skeleton_graph(self):
 		graph = {}
@@ -53,7 +70,7 @@ class Canvas:
 		if here in self.graph:
 			for nx in self.graph[here]:
 				if nx in data:
-					self.ax.quiver(data[here][0],
+					self.quivers[(here,nx,vec_color)] = self.ax.quiver(data[here][0],
 					 			   data[here][1],
 					 			   data[here][2],
 					 			   data[nx][0] - data[here][0],
@@ -71,6 +88,25 @@ class Canvas:
 		self.draw_skeleton_vec(0, color, data)
 		self.set_plot_label(color, label, data)
 
+	def update_skeleton_vec(self, here, vec_color, data):
+		if here in self.graph:
+			for nx in self.graph[here]:
+				if nx in data:
+					self.quivers[(here,nx,vec_color)].remove()
+					self.quivers[(here,nx,vec_color)] = self.ax.quiver(data[here][0],
+					 			   data[here][1],
+					 			   data[here][2],
+					 			   data[nx][0] - data[here][0],
+					 			   data[nx][1] - data[here][1],
+					 			   data[nx][2] - data[here][2],
+					 			   color=vec_color
+					)
+					self.update_skeleton_vec(nx, vec_color, data)
+
+	def update_skeleton(self, in_data, color):
+		data = self.make_dic_data(in_data)
+		self.update_skeleton_vec(0, color, data)
+
 	def draw_3D_plot(self, ground, estimate, idx):
 		self.flg = plt.figure()
 		self.ax = self.flg.add_subplot(111, projection='3d')
@@ -83,9 +119,31 @@ class Canvas:
 		self.ax.set_zlabel('Z Label')
 		plt.show()
 
-	def skeleton_3D_plot(self, ground_data, estimate_data, test_num, sleep_t):
-		test_num = min(test_num, len(ground_data))
-		for i in range(test_num):
+	def update_3D_plot(self, num, ground_data, estimate_data):
+		self.update_skeleton(ground_data[num], 'red')
+		self.update_skeleton(estimate_data[num], 'blue')
+		self.title.set_text('3D Test {}'.format(num))
+		self.ax.legend()
+
+	@check_time
+	def skeleton_3D_animation_save(self, ground_data, estimate_data, interval, save_img):
+		test_num = int(len(ground_data))
+		self.fig = plt.figure()
+		self.ax = self.fig.add_subplot(111, projection='3d')
+		self.ax.view_init(-75,-90)
+		# plt.subplots_adjust(0.12,0.12,0.90,0.90,0.20,0.20)
+		self.draw_skeleton(ground_data[0], 'red', 'ground')
+		self.draw_skeleton(estimate_data[0], 'blue', 'estimate')
+		self.title = self.ax.set_title('3D Test')
+		self.ax.set_xlabel('X Label')
+		self.ax.set_ylabel('Y Label')
+		self.ax.set_zlabel('Z Label')
+		ani = animation.FuncAnimation(self.fig, self.update_3D_plot, test_num, fargs=(ground_data, estimate_data), interval=interval, repeat=False)
+		# plt.show()
+		ani.save(save_img+"movie.gif", writer="imagemagick")
+
+	def skeleton_3D_plot(self, ground_data, estimate_data):
+		for i in range(len(ground_data)):
 			try:
 				self.draw_3D_plot(ground_data[i], estimate_data[i], i)
 			except KeyboardInterrupt:
@@ -93,7 +151,6 @@ class Canvas:
 
 	def pyplot_skeleton_point(self, ground_data, estimate_data, word_name, img_name, i):
 		idx = range(len(ground_data[0]))
-
 		fig, axs = plt.subplots(nrows=2, ncols=3, constrained_layout=True)
 		axs[0][0].plot(idx, ground_data[0], '-', color='red')
 		axs[0][0].plot(idx, estimate_data[0], '-', color='blue')
@@ -105,9 +162,7 @@ class Canvas:
 		axs[0][2].plot(idx, ground_data[2], '-', color='red', label='ground')
 		axs[0][2].plot(idx, estimate_data[2], '-', color='blue', label='estimate')
 		axs[0][2].legend(loc="upper right")
-
 		axs[0][2].set_title('Z position {}'.format(word_name))
-
 		axs[1][0].plot(idx, estimate_data[0] - ground_data[0], '-', color='red')
 		axs[1][0].set_xlabel('frame')
 		axs[1][0].set_ylabel('error(mm)')
@@ -115,7 +170,6 @@ class Canvas:
 		axs[1][1].set_xlabel('frame')
 		axs[1][2].plot(idx, estimate_data[2] - ground_data[2], '-', color='red')
 		axs[1][2].set_xlabel('frame')
-
 		fig.savefig(img_name+str(i)+'_'+word_name+'.png')
 		plt.close(fig)
 
@@ -130,8 +184,9 @@ class Canvas:
 	def get_point_plot_data(self, ground_data, estimate_data, test_num):
 		return self.get_point_data(ground_data, test_num), self.get_point_data(estimate_data, test_num)
 
-	def skeleton_point_plot(self, ground_data, estimate_data, test_num, img_name):
-		test_num = min(test_num, len(ground_data))
+	@check_time
+	def skeleton_point_plot(self, ground_data, estimate_data, img_name):
+		test_num = int(len(ground_data))
 		ground_point_data, estimate_point_data = self.get_point_plot_data(ground_data, estimate_data, test_num)
 		word_name = ["PELVIS","SPINE_NAVAL","SPINE_CHEST","NECK","CLAVICLE_LEFT","SHOULDER_LEFT","ELBOW_LEFT","WRIST_LEFT","HAND_LEFT","HANDTIP_LEFT","THUMB_LEFT","CLAVICLE_RIGHT","SHOULDER_RIGHT","ELBOW_RIGHT","WRIST_RIGHT","HAND_RIGHT","HANDTIP_RIGHT","THUMB_RIGHT","HIP_LEFT","KNEE_LEFT","ANKLE_LEFT","FOOT_LEFT","HIP_RIGHT","KNEE_RIGHT","ANKLE_RIGHT","FOOT_RIGHT","HEAD","NOSE","EYE_LEFT","EAR_LEFT","EYE_RIGHT","EAR_RIGHT"]
 		for i in range(ground_point_data.shape[0]):
@@ -149,27 +204,22 @@ class Canvas:
 
 	def pyplot_skeleton_length(self, ground_data, estimate_data, word_name, img_name, i):
 		idx = range(len(ground_data))
-
 		fig, axs = plt.subplots(nrows=2, ncols=1, constrained_layout=True)
 		axs[0].plot(idx, ground_data, '-', color='red', label='ground')
 		axs[0].plot(idx, estimate_data, '-', color='blue', label='estimate')
 		axs[0].set_ylabel('length(mm)')
 		axs[0].set_title('length {}'.format(word_name))
 		axs[0].legend(loc="upper right")
-
 		axs[1].plot(idx, estimate_data - ground_data, '-', color='red')
 		axs[1].set_xlabel('frame')
 		axs[1].set_ylabel('error(mm)')
-
 		fig.savefig(img_name+str(i)+'_'+word_name+'.png')
 		plt.close(fig)
 
-
-	def skeleton_length_plot(self, ground_data, estimate_data, test_num, img_name):
-		test_num = min(test_num, len(ground_data))
+	@check_time
+	def skeleton_length_plot(self, ground_data, estimate_data, img_name):
+		test_num = int(len(ground_data))
 		ground_length_data, estimate_length_data = self.get_length_plot_data(ground_data, estimate_data, test_num)
-
 		word_name = ["D_root_spine","D_spine_chest","D_l_chest_sh","D_l_sh_shc","D_l_shc_elbow","D_l_elbow_wrist","D_l_wrist_hand","D_l_hand_handtip","D_l_wrist_thumb","D_r_chest_sh","D_r_sh_shc","D_r_shc_elbow","D_r_elbow_wrist","D_r_wrist_hand","D_r_hand_handtip","D_r_wrist_thumb","D_chest_neck","D_neck_head","D_head_nose","D_l_nose_eye","D_l_eye_ear","D_r_nose_eye","D_r_eye_ear","D_l_root_hip","D_l_hip_knee","D_l_knee_ankle","D_l_ankle_foot","D_r_root_hip","D_r_hip_knee","D_r_knee_ankle","D_r_ankle_foot"]
-
 		for i in range(ground_length_data.shape[0]):
 			self.pyplot_skeleton_length(ground_length_data[i], estimate_length_data[i], word_name[i], img_name, i)
