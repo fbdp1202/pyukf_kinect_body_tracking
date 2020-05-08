@@ -13,6 +13,8 @@
 
 1. install python 3
 2. install python packages
+
+
 All of these and `pykalman` can be install using `easy_install`
 ```bash
 easy_install numpy matplotlib scipy wheel pykalman
@@ -29,6 +31,8 @@ python test.py
 
 - `test_skeleton_filter(person_name, pose, test_num)`
 - The skeleton data folder looks like this:
+
+
   `./data/skeleton_data/pereson_name/pose/`
 - Skeleton data form named `sk_timestamp_txt` and include one person data
 - save original and filtered data on `./result/person_name/pose/model_name/` each `ground_data.csv` and `estimate_data.csv`
@@ -43,6 +47,8 @@ test_skeleton_filter("jiwon", "crossing_arms_30sec", test_num=10)
 - `test_skeleton_draw(person_name, pose, plot_3D)`
 - `Load .csv file` saved above to provide `3D plot`, `(x, y, z) point plot` and `joint length plot` with pyplot.
 - Folder where the `point plot images` and `joint length plot images` are saved is as follows:
+
+
   `./result/person_name/pose/mode_name/` each `point` and `length`  folder
 - point plot
   ![](./result/jiwon/crossing_arms_30sec/ukf/point/18_HIP_LEFT.png)
