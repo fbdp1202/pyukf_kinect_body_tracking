@@ -23,7 +23,6 @@ def test_one_person_all_mode(person_name, test_num=1e9, cbr_num=1e9, model='ukf'
 		test_skeleton_draw(person_name, pos_mode)
 
 if __name__ == '__main__':
-	# test_skeleton_filter("jiwon", "crossing_arms_30sec", test_num=10)
-	# test_skeleton_draw("jiwon", "crossing_arms_30sec", True)
-	test_one_person_all_mode("jiwon")
-	# test("data/input_stand.txt", 50, 'ukf', True, 'point', False, 50, save_img=True)
+	test_skeleton_filter("jiwon", "crossing_arms_30sec", test_num=10)
+	# test_skeleton_draw("jiwon", "crossing_arms_30sec", plot_3D=True)
+	# test_one_person_all_mode("jiwon")
