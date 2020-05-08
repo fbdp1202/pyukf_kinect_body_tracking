@@ -1,7 +1,7 @@
 # PyUKF Kinect Body Tracking
 
 - This project aims to compenate **skeleton data** using **Unscented Kalman Filter(UKF)**.
-- Skeleton data is given 32 joint information from **Kinect v2 camera **and **Azure Kinect Body Tracking SDK (v1.0.1)**.
+- Skeleton data is given 32 joint information from **Kinect v2 camera** and **Azure Kinect Body Tracking SDK (v1.0.1)**.
 - **pykalman** library is used for UKF
 - **python v3.7**
 
