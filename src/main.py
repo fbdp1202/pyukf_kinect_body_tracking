@@ -173,10 +173,10 @@ def skeleton_draw(person_name, pos_mode, model, ground_data, estimate_data, slee
 	canvas.skeleton_point_plot(ground_data, estimate_data, img_name_point)
 	canvas.skeleton_length_plot(ground_data, estimate_data, img_name_length)
 
-def set_lower_init_cov(value_cov=2e-8, velo_cov_0=2e-6, velo_cov_1=2e-3, len_cov=1e-10, obs_cov_factor=1e-4, trans_factor=100):
+def set_lower_init_cov(value_cov=1e-6, velo_cov_0=1e-4, velo_cov_1=1e-2, len_cov=1e-10, obs_cov_factor=1e-4, trans_factor=100):
 	return [value_cov, velo_cov_0,value_cov, velo_cov_0,value_cov, velo_cov_1,value_cov, velo_cov_1,value_cov, velo_cov_0, len_cov,obs_cov_factor, trans_factor]
 
-def set_upper_init_cov(value_cov=1e-7, velo_cov=1e-4, len_cov=1e-10, obs_cov_factor=1e-4, trans_factor=100):
+def set_upper_init_cov(value_cov=1e-6, velo_cov=1e-4, len_cov=1e-10, obs_cov_factor=1e-4, trans_factor=100):
 	return [value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,value_cov,velo_cov,len_cov,obs_cov_factor,trans_factor]
 
 @check_time
