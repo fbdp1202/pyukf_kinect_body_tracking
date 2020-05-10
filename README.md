@@ -80,7 +80,7 @@ python test.py jiwon *
 
   `./data/skeleton_data/pereson_name/pose/`
 - Skeleton data form named `sk_timestamp_txt` and include one person data
-- save original and filtered data on `./result/person_name/pose/model_name/` each `ground_data.csv` and `estimate_data.csv`
+- save original and filtered data on `./result/person_name/pose/model_name/` each `original_data.csv` and `estimate_data.csv`
 - **Example code** `(persone_name="jiwon", pose_mode="crossing_arms_30sec", model="ukf")`
 
 ```python

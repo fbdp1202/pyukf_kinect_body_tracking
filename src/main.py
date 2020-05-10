@@ -85,21 +85,24 @@ def make_filter(lower_init_mean,  lower_init_cov, upper_init_mean, upper_init_co
 
 @check_time
 def run_ukf(ukf, skeletons, test_num):
-	ground_data = []
+	original_data = []
 	estimate_data = []
+	estimate_state = []
 
 	test_num = min(len(skeletons), test_num)
 	print("total test is {}".format(test_num))
 	print("test_num:", end=' ')
 	for i in range(test_num):
 		curr_input = skeletons[i].get_measurement()
-		ground_data.append(curr_input)
-		estimate_data.append(ukf.update(curr_input))
+		original_data.append(curr_input)
+		state, data = ukf.update(curr_input)
+		estimate_data.append(data)
+		estimate_state.append(state)
 		if i % 10 == 0:
 			print(i, end=' ')
 	print('')
 
-	return ground_data, estimate_data
+	return original_data, estimate_data, estimate_state
 
 def make_folder(folder_name):
 	if not os.path.isdir(folder_name):
@@ -113,7 +116,7 @@ def get_save_skeleton_data_folder_name(person_name, pos_mode, model):
 	folder_name = make_folder(folder_name + '/' + model)
 	return folder_name + '/'
 
-def save_csv(folder_name, filename, data):
+def save_sk_data_to_csv(folder_name, filename, data):
 	filename = folder_name + filename
 	f = open(filename, "w", encoding="UTF-8")
 	for i in range(len(data)):
@@ -125,11 +128,23 @@ def save_csv(folder_name, filename, data):
 				else:
 					f.write(',')
 
+def save_sk_state_to_csv(folder_name, filename, data):
+	filename = folder_name + filename
+	f = open(filename, 'w', encoding="UTF-8")
+	for i in range(len(data)):
+		for j in range(len(data[i])):
+			f.write(str(data[i][j]))
+			if j == (len(data[i])-1):
+				f.write('\n')
+			else:
+				f.write(',')
+
 @check_time
-def save_skeleton_data_to_csv(person_name, pos_mode, ground_data, estimate_data, model):
+def save_skeleton_data_to_csv(person_name, pos_mode, original_data, estimate_data, estimate_state, model):
 	csv_folder_name = get_save_skeleton_data_folder_name(person_name, pos_mode, model)
-	save_csv(csv_folder_name, 'ground_data.csv', ground_data)
-	save_csv(csv_folder_name, 'estimate_data.csv', estimate_data)
+	save_sk_data_to_csv(csv_folder_name, 'original_data.csv', original_data)
+	save_sk_data_to_csv(csv_folder_name, 'estimate_data.csv', estimate_data)
+	save_sk_state_to_csv(csv_folder_name, 'estimate_state.csv', estimate_state)
 
 def read_csv(filename):
 	data = []
@@ -149,9 +164,9 @@ def read_csv(filename):
 @check_time
 def read_skeleton_data_from_csv(person_name, pos_mode, model):
 	csv_folder_name = get_save_skeleton_data_folder_name(person_name, pos_mode, model)
-	ground_data = read_csv(csv_folder_name + 'ground_data.csv')
+	original_data = read_csv(csv_folder_name + 'original_data.csv')
 	estimate_data = read_csv(csv_folder_name + 'estimate_data.csv')
-	return ground_data, estimate_data
+	return original_data, estimate_data
 
 def get_save_image_file_name(person_name, pos_mode, model, plot_mode):
 	folder_name = make_folder('result')
@@ -162,16 +177,16 @@ def get_save_image_file_name(person_name, pos_mode, model, plot_mode):
 	return folder_name + '/'
 
 @check_time
-def skeleton_draw(person_name, pos_mode, model, ground_data, estimate_data, sleep_t=100):
+def skeleton_draw(person_name, pos_mode, model, original_data, estimate_data, sleep_t=100):
 	canvas = Canvas()
 	img_name_point = get_save_image_file_name(person_name, pos_mode, model, 'point')
 	img_name_length = get_save_image_file_name(person_name, pos_mode, model, 'length')
 	img_name_3D = get_save_image_file_name(person_name, pos_mode, model, 'plot_3D')
-	# 	canvas.skeleton_3D_plot(ground_data, estimate_data)
+	# 	canvas.skeleton_3D_plot(original_data, estimate_data)
 
-	canvas.skeleton_3D_animation_save(ground_data, estimate_data, sleep_t, img_name_3D)
-	canvas.skeleton_point_plot(ground_data, estimate_data, img_name_point)
-	canvas.skeleton_length_plot(ground_data, estimate_data, img_name_length)
+	canvas.skeleton_3D_animation_save(original_data, estimate_data, sleep_t, img_name_3D)
+	canvas.skeleton_point_plot(original_data, estimate_data, img_name_point)
+	canvas.skeleton_length_plot(original_data, estimate_data, img_name_length)
 
 def set_lower_init_cov(value_cov=1e-6, velo_cov_0=1e-4, velo_cov_1=1e-2, len_cov=1e-10, obs_cov_factor=1e-4, trans_factor=100):
 	return [value_cov, velo_cov_0,value_cov, velo_cov_0,value_cov, velo_cov_1,value_cov, velo_cov_1,value_cov, velo_cov_0, len_cov,obs_cov_factor, trans_factor]
@@ -187,5 +202,5 @@ def simulation_ukf(filename, test_num, cbr_num, model):
 	upper_init_cov = set_upper_init_cov()
 	flt = make_filter(lower_init_mean, lower_init_cov, upper_init_mean, upper_init_cov, model)
 
-	ground_data, estimate_data = run_ukf(flt, skeletons, test_num)
-	return ground_data, estimate_data
+	original_data, estimate_data, estimate_state = run_ukf(flt, skeletons, test_num)
+	return original_data, estimate_data, estimate_state

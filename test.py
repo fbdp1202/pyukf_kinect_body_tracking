@@ -5,12 +5,12 @@ from main import *
 
 def test_skeleton_filter(person_name, pose_mode, test_num, cbr_num, model):
 	filename = merge_skeleton_data('data/skeleton_data/' + person_name + '/' + pose_mode)
-	ground_data, estimate_data = simulation_ukf(filename, test_num, cbr_num, model)
-	save_skeleton_data_to_csv(person_name, pose_mode, ground_data, estimate_data, model)
+	original_data, estimate_data, estimate_state = simulation_ukf(filename, test_num, cbr_num, model)
+	save_skeleton_data_to_csv(person_name, pose_mode, original_data, estimate_data, estimate_state, model)
 
 def test_skeleton_draw(person_name, pose_mode, model):
-	ground_data, estimate_data = read_skeleton_data_from_csv(person_name, pose_mode, model)
-	skeleton_draw(person_name, pose_mode, model, ground_data, estimate_data)
+	original_data, estimate_data = read_skeleton_data_from_csv(person_name, pose_mode, model)
+	skeleton_draw(person_name, pose_mode, model, original_data, estimate_data)
 
 def test_skeleton(person_name, pose_mode, test_num, cbr_num, onFilter, model, onPlot):
 	if onFilter == 'on':

@@ -18,6 +18,7 @@ class ukf_Filter:
 		self.cov = param.init_trans_cov
 		
 		self.trnas_matrix = param.trans_matrx
+		self.cur_state = []
 		self.new_state = []
 
 		self.ukf = pykalman.AdditiveUnscentedKalmanFilter(
@@ -40,6 +41,7 @@ class ukf_Filter:
 	# observation function for Additive UKF
 	# expected range data
 	def observation_lower(self, state):
+		self.cur_state = state
 #######################################################################################################################
 # read state
 #######################################################################################################################
@@ -100,6 +102,7 @@ class ukf_Filter:
 	# observation function for Additive UKF
 	# expected range data
 	def observation_upper(self, state):
+		self.cur_state = state
 #######################################################################################################################
 # read state
 #######################################################################################################################
@@ -225,7 +228,7 @@ class ukf_Filter:
 
 	def update(self, measurement):
 		self.mean, self.cov = self.ukf.filter_update(self.mean, self.cov, measurement)
-		return self.new_state
+		return self.cur_state, self.new_state
 
 class ukf_Filter_Controler:
 	def __init__(self, l_init_mean, l_init_cov, u_init_mean, u_init_cov):
@@ -239,6 +242,9 @@ class ukf_Filter_Controler:
 		for i in list_point:
 			l_meas.append(measurement[i])
 		return np.array(l_meas).reshape(-1)
+
+	def get_cur_state(self, lower_state, upper_state):
+		return list(lower_state) + list(upper_state)
 
 	def get_new_state(self, lower_state, upper_state):
 		new_dic = {}
@@ -258,6 +264,6 @@ class ukf_Filter_Controler:
 
 	# update state using ukf
 	def update(self, measurement):
-		lower_state = self.l_flt.update(self.get_measurement(measurement, self.lower_point))
-		upper_state = self.u_flt.update(self.get_measurement(measurement, self.upper_point))
-		return self.get_new_state(lower_state, upper_state)
+		lower_cur_state, lower_new_state = self.l_flt.update(self.get_measurement(measurement, self.lower_point))
+		upper_cur_state, upper_new_state = self.u_flt.update(self.get_measurement(measurement, self.upper_point))
+		return self.get_cur_state(lower_cur_state, upper_cur_state), self.get_new_state(lower_new_state, upper_new_state)
